@@ -262,8 +262,7 @@
       document.getElementById('tickSec').textContent = (tickMs/1000).toString();
 
       // Site center (example: Googleplex area) – change to your site
-     const SITE_CENTER = { lat: 37.422, lng: -122.084 };
-
+      const SITE_CENTER = { lat: 37.422, lng: -122.084 };
 
       // Hazard zones (center + radius in meters)
       const HAZARD_ZONES = [
@@ -279,27 +278,52 @@
         { id: 'W-404', name: 'Diego Ruiz', role: 'Operator', position: jitter(SITE_CENTER, 120) },
       ];
 
-      // Map init
-      const map = L.map('liveMap');
-      const tile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' });
-      tile.addTo(map);
+      // Map init (ensure immediate render with a starting view)
+      const map = L.map('liveMap', { zoomControl: true });
+      map.setView([SITE_CENTER.lat, SITE_CENTER.lng], 17);
 
-      // Fit bounds to hazards + workers
+      // Primary tile + simple fallback on error (kept local to this block only)
+      const primaryTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 20
+      }).addTo(map);
+
+      let fallbackAdded = false;
+      primaryTile.on('tileerror', () => {
+        if (fallbackAdded) return;
+        fallbackAdded = true;
+        L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors, HOT',
+          maxZoom: 20
+        }).addTo(map);
+      });
+
+      // Fit bounds to hazards + workers AFTER layout, then fix size
       function allPoints(){
-        return [ ...workers.map(w=>[w.position.lat, w.position.lng]), ...HAZARD_ZONES.map(z=>[z.center.lat, z.center.lng]) ];
+        return [
+          ...workers.map(w=>[w.position.lat, w.position.lng]),
+          ...HAZARD_ZONES.map(z=>[z.center.lat, z.center.lng])
+        ];
       }
-      map.fitBounds(allPoints(), { padding: [40,40] });
+      setTimeout(() => {
+        try { map.fitBounds(allPoints(), { padding: [40,40] }); } catch(e) {}
+        map.invalidateSize();
+      }, 0);
 
       // Draw hazards
-      const hazardLayers = HAZARD_ZONES.map(z => L.circle([z.center.lat, z.center.lng], { radius: z.radius, color: '#ef4444', fillColor: '#ef4444', fillOpacity: .08, weight: 2 }).addTo(map).bindPopup(`<b>${z.name}</b><br>Radius: ${z.radius} m`));
+      HAZARD_ZONES.forEach(z =>
+        L.circle([z.center.lat, z.center.lng], {
+          radius: z.radius, color: '#ef4444', fillColor: '#ef4444', fillOpacity: .08, weight: 2
+        }).addTo(map).bindPopup(`<b>${z.name}</b><br>Radius: ${z.radius} m`)
+      );
 
       // Worker markers
       const markers = new Map();
       function ensureMarker(worker){
         if (markers.has(worker.id)) return markers.get(worker.id);
-        const marker = L.circleMarker([worker.position.lat, worker.position.lng], { radius: 9, color: '#22c55e', fillColor: '#22c55e', fillOpacity: .9, weight: 2 })
-          .addTo(map)
-          .bindPopup(renderPopup(worker));
+        const marker = L.circleMarker([worker.position.lat, worker.position.lng], {
+          radius: 9, color: '#22c55e', fillColor: '#22c55e', fillOpacity: .9, weight: 2
+        }).addTo(map).bindPopup(renderPopup(worker));
         markers.set(worker.id, marker);
         return marker;
       }
@@ -317,12 +341,7 @@
         const m = ensureMarker(worker);
         m.setLatLng([worker.position.lat, worker.position.lng]);
         const status = getStatus(worker.position);
-        m.setStyle({
-          color: status.color,
-          fillColor: status.color,
-          fillOpacity: .9,
-          weight: 2
-        });
+        m.setStyle({ color: status.color, fillColor: status.color, fillOpacity: .9, weight: 2 });
         m.setPopupContent(renderPopup(worker));
       }
 
@@ -373,6 +392,3 @@
   </script>
 </body>
 </html>
-
-
-
