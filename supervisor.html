@@ -242,9 +242,6 @@
             font-style: italic;
         }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 </head>
 <body>
     <header>
@@ -253,14 +250,6 @@
     </header>
 
     <main>
-
-        <section id="zoneAlerts">
-    <h2>Worker Zone Alerts</h2>
-    <ul id="activeAlerts">
-        <!-- Alerts populated dynamically -->
-    </ul>
-</section>
-
         <!-- Hazard Reports -->
         <section id="hazardReports">
             <h2>🚨 Hazard Reports</h2>
@@ -268,22 +257,6 @@
                 <!-- Reports will appear here -->
             </ul>
         </section>
-        <section id="liveMap">
-  <h2>Live Worker Map & Zone Risk</h2>
-  <div id="supervisorMap" style="height:360px; border-radius:10px; overflow:hidden; border:1px solid #e5e5e5"></div>
-</section>
-
-<section id="breachFeed">
-  <h2>Zone Breach Alerts</h2>
-  <ul id="breachList"><li>No breaches yet.</li></ul>
-</section>
-
-
-        <section id="integratedLeaderboard">
-    <h2>Worker Engagement & Safety Compliance</h2>
-    <canvas id="integratedChart" width="700" height="400"></canvas>
-</section>
-
 
         <!-- Worker Compliance / Leaderboard -->
         <section id="workerCompliance">
@@ -492,220 +465,6 @@
         function logout(){
             window.location.href = 'index.html';
         }
-
-        function loadZoneAlerts() {
-    const alertsContainer = document.getElementById("activeAlerts");
-    alertsContainer.innerHTML = "";
-
-    const zoneBreaches = JSON.parse(localStorage.getItem("zoneBreaches") || "[]");
-
-    if(zoneBreaches.length === 0){
-        const li = document.createElement('li');
-        li.textContent = "No active alerts.";
-        alertsContainer.appendChild(li);
-        return;
-    }
-
-    zoneBreaches.forEach(breach => {
-        const li = document.createElement('li');
-        const time = new Date(breach.timestamp).toLocaleTimeString();
-        li.textContent = `${time} - ${breach.worker} entered ${breach.zone}`;
-        alertsContainer.appendChild(li);
-    });
-}
-
-// Call on page load and auto-refresh every 5 seconds
-loadZoneAlerts();
-setInterval(loadZoneAlerts, 5000);
-
-
-        function loadIntegratedLeaderboard() {
-    const leaderboard = JSON.parse(localStorage.getItem("leaderboard") || "[]");
-    const zoneBreaches = JSON.parse(localStorage.getItem("zoneBreaches") || "[]");
-
-    // Aggregate points per worker
-    const workersMap = {};
-
-    // Points from leaderboard
-    leaderboard.forEach(entry => {
-        if(!workersMap[entry.worker]) workersMap[entry.worker] = {checklist:0, video:0, hazard:0, zoneBreach:0};
-        workersMap[entry.worker][entry.type] += entry.points;
-    });
-
-    // Count zone breaches per worker (could subtract points or mark as alerts)
-    zoneBreaches.forEach(breach => {
-        if(!workersMap[breach.worker]) workersMap[breach.worker] = {checklist:0, video:0, hazard:0, zoneBreach:0};
-        workersMap[breach.worker].zoneBreach += 1; // count as penalty or alert
-    });
-
-    const labels = Object.keys(workersMap);
-    const checklistData = labels.map(w => workersMap[w].checklist);
-    const videoData = labels.map(w => workersMap[w].video);
-    const hazardData = labels.map(w => workersMap[w].hazard);
-    const zoneBreachData = labels.map(w => workersMap[w].zoneBreach);
-
-    const ctx = document.getElementById('integratedChart').getContext('2d');
-    if(window.integratedChart) window.integratedChart.destroy();
-    window.integratedChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Checklist Points', data: checklistData, backgroundColor: 'rgba(54, 162, 235, 0.7)' },
-                { label: 'Video Points', data: videoData, backgroundColor: 'rgba(255, 206, 86, 0.7)' },
-                { label: 'Hazard Points', data: hazardData, backgroundColor: 'rgba(75, 192, 192, 0.7)' },
-                { label: 'Zone Breaches', data: zoneBreachData, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: { title: { display: true, text: 'Worker Engagement & Safety Compliance' } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-}
-
-// Load on page load and auto-refresh every 5 seconds
-loadIntegratedLeaderboard();
-setInterval(loadIntegratedLeaderboard, 5000);
-        // ================== LIVE MAP (SUPERVISOR) ================== //
-const supZones = [
-  { name: "Blasting Zone", lat: 19.125, lon: 84.125, radius: 120, baseRisk: "HIGH" },
-  { name: "Heavy Machinery", lat: 19.123, lon: 84.123, radius: 140, baseRisk: "MEDIUM" },
-  { name: "Storage Yard",   lat: 19.127, lon: 84.128, radius: 100, baseRisk: "LOW" }
-];
-
-let supMap, supCircles = [], workerMarkers = new Map();
-
-function supRiskColor(level) {
-  return level === "HIGH" ? "#d90429" : level === "MEDIUM" ? "#ffb703" : "#2a9d8f";
-}
-function supZoneRisk(z) {
-  // mirror logic from worker (basic)
-  const reports = JSON.parse(localStorage.getItem("hazardReports") || "[]");
-  let level = z.baseRisk;
-  // same thresholds, adjust if needed
-  return level;
-}
-
-function initSupervisorMap() {
-  if (supMap) return;
-  supMap = L.map('supervisorMap').setView([supZones[0].lat, supZones[0].lon], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap' }).addTo(supMap);
-  paintSupZones();
-}
-
-function paintSupZones() {
-  supCircles.forEach(c => supMap.removeLayer(c));
-  supCircles = [];
-  supZones.forEach(z => {
-    const lvl = supZoneRisk(z);
-    const c = L.circle([z.lat, z.lon], {
-      radius: z.radius, color: supRiskColor(lvl), fillColor: supRiskColor(lvl), fillOpacity: 0.25, weight: 2
-    }).addTo(supMap);
-    c.bindTooltip(`${z.name} — Risk: ${lvl}`);
-    supCircles.push(c);
-  });
-}
-
-function refreshWorkerMarkers() {
-  // Scan localStorage for keys workerLocation_*
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith("workerLocation_")) {
-      const obj = JSON.parse(localStorage.getItem(k) || "{}");
-      if (!obj.lat || !obj.lon) return;
-      const key = obj.user;
-      if (!workerMarkers.has(key)) {
-        const m = L.marker([obj.lat, obj.lon]).addTo(supMap);
-        m.bindTooltip(`${obj.user}`);
-        workerMarkers.set(key, m);
-      } else {
-        workerMarkers.get(key).setLatLng([obj.lat, obj.lon]);
-      }
-    }
-  });
-}
-
-function loadBreachFeed() {
-  const list = document.getElementById('breachList');
-  list.innerHTML = '';
-  const events = JSON.parse(localStorage.getItem("breachEvents") || "[]").slice(-20).reverse(); // last 20, newest first
-  if (events.length === 0) {
-    const li = document.createElement('li'); li.textContent = "No breaches yet."; list.appendChild(li); return;
-  }
-  events.forEach(ev => {
-    const li = document.createElement('li');
-    li.textContent = `${ev.time} — ${ev.user} entered ${ev.zone} (${ev.risk})`;
-    list.appendChild(li);
-  });
-}
-
-initSupervisorMap();
-refreshWorkerMarkers();
-loadBreachFeed();
-
-// Auto-refresh every 3 seconds
-setInterval(() => {
-  paintSupZones();
-  refreshWorkerMarkers();
-  loadBreachFeed();
-}, 3000);
-
-<!-- ✅ Firebase Initialization -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-
-  // 🔥 Your Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyB-mO8SbZa4ajdDjBOFItnjpCbs1twqVgc",
-    authDomain: "mine-safety-system.firebaseapp.com",
-    projectId: "mine-safety-system",
-    storageBucket: "mine-safety-system.firebasestorage.app",
-    messagingSenderId: "542149010693",
-    appId: "1:542149010693:web:8832d89cb04ab31f03436c",
-    measurementId: "G-YX5YTQJWZ6"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  console.log("✅ Firebase connected on Supervisor");
-
-  // =============== 🔴 Real-time Firebase Worker Location Listening ===============
-
-  // We'll reuse your Leaflet map & workerMarkers map if it exists
-  if (typeof supMap !== 'undefined') {
-    console.log("🛰 Listening to Firestore for worker locations...");
-    onSnapshot(collection(db, "workerLocations"), snapshot => {
-      snapshot.docChanges().forEach(change => {
-        const username = change.doc.id;
-        const data = change.doc.data();
-        if (!data.lat || !data.lon) return;
-
-        if (change.type === "added" || change.type === "modified") {
-          // Check if marker exists
-          if (!workerMarkers.has(username)) {
-            const marker = L.marker([data.lat, data.lon]).addTo(supMap);
-            marker.bindTooltip(username);
-            workerMarkers.set(username, marker);
-          } else {
-            workerMarkers.get(username).setLatLng([data.lat, data.lon]);
-          }
-        }
-      });
-    });
-  } else {
-    console.warn("⚠️ supMap not found yet — Firebase listener skipped");
-  }
-</script>
-
     </script>
 </body>
-
 </html>
-
-
-
-
-
