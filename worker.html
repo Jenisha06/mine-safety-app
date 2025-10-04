@@ -840,26 +840,9 @@
         window.repaintZones      = paintZones;
         // ================== /LIVE GEOFENCE + MAP ================== //
     </script>
-    <script src="script.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+<script src="script.js"></script>
 
-  const firebaseConfig = { /* same config as above */ };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const username = sessionStorage.getItem('username') || 'Worker';
-
-  navigator.geolocation.watchPosition(pos => {
-    setDoc(doc(db, "workerLocations", username), {
-      lat: pos.coords.latitude,
-      lon: pos.coords.longitude,
-      updatedAt: serverTimestamp()
-    });
-  });
-</script>
-<!-- ✅ PLACE THIS JUST BEFORE </body>, AFTER your normal scripts -->
+<!-- ✅ Firebase init (ONLY ONCE) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
   import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
@@ -879,7 +862,6 @@
 
   const workerName = sessionStorage.getItem('username') || 'Worker';
 
-  // ✅ Move Firebase location upload INSIDE watchPosition safely
   if ('geolocation' in navigator) {
     navigator.geolocation.watchPosition(async pos => {
       try {
@@ -894,7 +876,11 @@
       }
     });
   }
-    let model;
+</script>
+
+<!-- ✅ Camera PPE Detection — NORMAL SCRIPT (not module) -->
+<script>
+let model;
 let cameraStream;
 let detectionInterval;
 
@@ -939,27 +925,22 @@ function detectPPE(video) {
   if (!model) return;
   model.detect(video).then(predictions => {
     const seen = predictions.map(p => p.class.toLowerCase());
-    if (seen.includes("person")) markChecklistItem("Helmet");
-    document.getElementById('cameraStatus').innerText = `Detecting: ${seen.slice(0,5).join(", ") || "none"}`;
+    document.getElementById('cameraStatus').innerText =
+      `Detecting: ${seen.slice(0,5).join(", ") || "none"}`;
   });
 }
 
-function markChecklistItem(text) {
-  const items = document.querySelectorAll("#checklistItems li");
-  items.forEach(li => {
-    if (li.innerText.toLowerCase().includes(text.toLowerCase())) {
-      const cb = li.querySelector('input[type="checkbox"]');
-      if (cb && !cb.checked) cb.checked = true;
-    }
-  });
-}
+// ✅ Attach functions to window for button onclick
 window.startCamera = startCamera;
 window.stopCamera = stopCamera;
 </script>
 
+
+
 </body>
 
 </html>
+
 
 
 
