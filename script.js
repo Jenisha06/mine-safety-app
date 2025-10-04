@@ -570,6 +570,14 @@ function stopLiveTracking() {
   document.getElementById("zoneAlert").innerText = "Tracking stopped.";
   speakText?.("Live tracking stopped.");
 }
+function markVideoWatched() {
+  const successMsg = document.getElementById('videoSuccess');
+  successMsg.classList.add('show');
+  userPoints += 10;
+  setTimeout(() => successMsg.classList.remove('show'), 3000);
+}
+
+
 
 
 
