@@ -1,947 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supervisor Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            min-height: 100vh;
-            color: #333;
-            padding-bottom: 40px;
-        }
-
-        header {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            padding: 20px 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            animation: slideDown 0.5s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        header h1 {
-            font-size: 28px;
-            color: #2d4a8a;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        header h1 span {
-            color: #2a5298;
-            font-weight: 800;
-        }
-
-        .logoutBtn {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-        }
-
-        .logoutBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
-        }
-
-        main {
-            max-width: 1400px;
-            margin: 30px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-
-        section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.6s ease-out;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        section:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        section h2 {
-            color: #1e3c72;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid #2a5298;
-             display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #hazardReports {
-           grid-column: span 1;
-            grid-row: span 2;
-        }
-
-        #workerCompliance {
-            grid-column: span 1;
-        }
-
-         #analytics {
-            grid-column: span 1;
-        }
-
-        #analyticsTrends {
-            grid-column: span 2;
-        }
-
-        #hazardHeatmap {
-            grid-column: span 2;
-        }
-
-        ul, ol {
-            list-style-position: inside;
-            color: #34495e;
-        }
-
-        ul li, ol li {
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        ul li:hover, ol li:hover {
-            background: #e8f4f8;
-            border-left-color: #2a5298;
-            transform: translateX(4px);
-        }
-
-        ol li {
-            border-left-color: #27ae60;
-            font-weight: 600;
-        }
-
-        ol li:nth-child(1) {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-left-color: #f39c12;
-        }
-
-        ol li:nth-child(2) {
-            background: linear-gradient(135deg, #c0c0c0 0%, #d9d9d9 100%);
-            border-left-color: #95a5a6;
-        }
-
-        ol li:nth-child(3) {
-            background: linear-gradient(135deg, #cd7f32 0%, #d89a5a 100%);
-            border-left-color: #d35400;
-        }
-
-        canvas {
-            max-width: 100%;
-            height: auto !important;
-            margin-top: 12px;
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-            header {
-                padding: 16px 20px;
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-
-            header h1 {
-                font-size: 20px;
-            }
-
-            .logoutBtn {
-                width: 100%;
-            }
-
-            main {
-                margin: 20px auto;
-                padding: 0 16px;
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            #analytics, #analyticsTrends, #hazardHeatmap {
-                grid-column: span 1;
-            }
-
-            section {
-                padding: 20px;
-            }
-
-            section h2 {
-                font-size: 18px;
-            }
-
-            ul li, ol li {
-                font-size: 13px;
-                padding: 10px 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            header h1 {
-                font-size: 18px;
-            }
-
-            section {
-                padding: 16px;
-            }
-
-            section h2 {
-                font-size: 16px;
-                margin-bottom: 16px;
-            }
-        }
-
-        /* Empty state styling */
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #7f8c8d;
-            font-style: italic;
-        }
-
-         /* Hazard Reports */
-        #hazardList {
-            list-style: none;
-        }
-
-        #hazardList li {
-            padding: 14px 16px;
-            margin-bottom: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #dc3545;
-            font-size: 14px;
-            line-height: 1.6;
-            transition: all 0.3s ease;
-        }
-
-        #hazardList li:hover {
-            background: #fee;
-            transform: translateX(4px);
-        }
-
-        .file-attachment {
-            display: inline-block;
-            margin-top: 4px;
-            color: #6c757d;
-            font-size: 13px;
-        }
-
-        .file-attachment::before {
-            content: "📎 ";
-        }
-
-        /* Leaderboard */
-        #complianceList {
-            list-style: none;
-            counter-reset: leaderboard;
-        }
-
-        #complianceList li {
-            padding: 14px 18px;
-            margin-bottom: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            counter-increment: leaderboard;
-            position: relative;
-            padding-left: 50px;
-        }
-
-        #complianceList li::before {
-            content: counter(leaderboard);
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            background: #6c757d;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        #complianceList li:hover {
-            transform: translateX(4px);
-        }
-
-        #complianceList li:nth-child(1) {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-left-color: #f39c12;
-        }
-
-        #complianceList li:nth-child(1)::before {
-            background: #f39c12;
-            content: "🥇";
-            font-size: 16px;
-        }
-
-        #complianceList li:nth-child(2) {
-            background: linear-gradient(135deg, #c0c0c0 0%, #e0e0e0 100%);
-            border-left-color: #95a5a6;
-        }
-
-        #complianceList li:nth-child(2)::before {
-            background: #95a5a6;
-            content: "🥈";
-            font-size: 16px;
-        }
-
-        #complianceList li:nth-child(3) {
-            background: linear-gradient(135deg, #cd7f32 0%, #e69f6e 100%);
-            border-left-color: #d35400;
-        }
-
-        #complianceList li:nth-child(3)::before {
-            background: #d35400;
-            content: "🥉";
-            font-size: 16px;
-        }
-
-        /* Charts */
-        canvas {
-            max-width: 100%;
-            height: auto !important;
-            margin-top: 12px;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 1200px) {
-            main {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            #hazardReports,
-            #analytics,
-            #analyticsTrends,
-            #hazardHeatmap {
-                grid-column: span 2;
-            }
-        }
-
-        @media (max-width: 768px) {
-            header {
-                padding: 16px 20px;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            header h1 {
-                font-size: 22px;
-            }
-
-            .logoutBtn {
-                width: 100%;
-            }
-
-            main {
-                margin: 20px auto;
-                padding: 0 16px;
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            section {
-                grid-column: span 1 !important;
-                grid-row: span 1 !important;
-                padding: 20px;
-            }
-
-            section h2 {
-                font-size: 18px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            header h1 {
-                font-size: 20px;
-            }
-
-            section {
-                padding: 16px;
-            }
-
-            section h2 {
-                font-size: 16px;
-            }
-
-            #complianceList li {
-                font-size: 14px;
-                padding-left: 45px;
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #6c757d;
-            font-style: italic;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supervisor Dashboard</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      min-height: 100vh; color: #333; padding-bottom: 40px;
+    }
+    header { background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); padding: 20px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; animation: slideDown 0.5s ease-out; }
+    @keyframes slideDown { from { transform: translateY(-100%); opacity:0;} to { transform: translateY(0); opacity:1;} }
+    header h1 { font-size:28px; color:#2d4a8a; font-weight:700; display:flex; align-items:center; gap:12px; }
+    header h1 span { color:#2a5298; font-weight:800; }
+    .logoutBtn { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color:white; border:none; padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:.3s; box-shadow:0 4px 12px rgba(231,76,60,.3); }
+    .logoutBtn:hover { transform: translateY(-2px); box-shadow:0 6px 16px rgba(231,76,60,.4); }
+
+    main { max-width:1400px; margin:30px auto; padding:0 20px; display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px; }
+    section { background:rgba(255,255,255,.95); backdrop-filter: blur(10px); border-radius:16px; padding:28px; box-shadow:0 8px 32px rgba(0,0,0,.1); animation: fadeInUp .6s ease-out; transition: transform .3s, box-shadow .3s; }
+    section:hover { transform: translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,.15); }
+    @keyframes fadeInUp { from { opacity:0; transform: translateY(30px);} to { opacity:1; transform: translateY(0);} }
+    section h2 { color:#1e3c72; font-size:20px; font-weight:700; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #2a5298; display:flex; align-items:center; gap:10px; }
+
+    /* Existing layout placements */
+    #hazardReports { grid-column: span 1; grid-row: span 2; }
+    #workerCompliance { grid-column: span 1; }
+    #analytics { grid-column: span 1; }
+    #analyticsTrends { grid-column: span 2; }
+    #hazardHeatmap { grid-column: span 2; }
+
+    /* New: Live Map spans 2 columns */
+    #liveMapSection { grid-column: span 2; }
+    #liveMap { width: 100%; height: 460px; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+
+    ul, ol { list-style-position: inside; color:#34495e; }
+    ul li, ol li { padding:12px 16px; margin-bottom:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid #3498db; transition:.3s; font-size:14px; line-height:1.6; }
+    ul li:hover, ol li:hover { background:#e8f4f8; border-left-color:#2a5298; transform: translateX(4px); }
+    ol li { border-left-color:#27ae60; font-weight:600; }
+    ol li:nth-child(1){ background:linear-gradient(135deg,#ffd700 0%,#ffed4e 100%); border-left-color:#f39c12; }
+    ol li:nth-child(2){ background:linear-gradient(135deg,#c0c0c0 0%,#d9d9d9 100%); border-left-color:#95a5a6; }
+    ol li:nth-child(3){ background:linear-gradient(135deg,#cd7f32 0%,#d89a5a 100%); border-left-color:#d35400; }
+
+    canvas { max-width:100%; height:auto !important; margin-top:12px; }
+
+    /* Legend + status pills */
+    .legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; font-size:14px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:600; }
+    .pill.safe { background:#ecfdf5; color:#166534; }
+    .pill.warn { background:#fffbeb; color:#92400e; }
+    .pill.danger { background:#fee2e2; color:#991b1b; }
+
+    /* Mobile optimizations */
+    @media (max-width: 1200px) {
+      main { grid-template-columns: repeat(2, 1fr); }
+      #hazardReports, #analytics, #analyticsTrends, #hazardHeatmap, #liveMapSection { grid-column: span 2; }
+    }
+    @media (max-width: 768px) {
+      header { padding:16px 20px; flex-direction:column; gap:12px; text-align:center; }
+      header h1 { font-size:22px; }
+      .logoutBtn { width:100%; }
+      main { margin:20px auto; padding:0 16px; grid-template-columns: 1fr; gap:20px; }
+      section { grid-column: span 1 !important; grid-row: span 1 !important; padding:20px; }
+      section h2 { font-size:18px; }
+      #liveMap { height: 360px; }
+    }
+    @media (max-width: 480px) {
+      header h1 { font-size:20px; }
+      section { padding:16px; }
+      section h2 { font-size:16px; }
+      #complianceList li { font-size:14px; padding-left:45px; }
+      #liveMap { height: 300px; }
+    }
+
+    .empty-state { text-align:center; padding:30px; color:#6c757d; font-style:italic; }
+    #hazardList { list-style:none; }
+    #hazardList li { padding:14px 16px; margin-bottom:12px; background:#f8f9fa; border-radius:8px; border-left:4px solid #dc3545; font-size:14px; line-height:1.6; transition:.3s; }
+    #hazardList li:hover { background:#fee; transform: translateX(4px); }
+    .file-attachment { display:inline-block; margin-top:4px; color:#6c757d; font-size:13px; }
+    .file-attachment::before { content: "📎 "; }
+
+    #complianceList { list-style:none; counter-reset: leaderboard; }
+    #complianceList li { padding:14px 18px; margin-bottom:12px; background:#f8f9fa; border-radius:8px; border-left:4px solid #28a745; font-weight:600; font-size:15px; transition:.3s; counter-increment: leaderboard; position:relative; padding-left:50px; }
+    #complianceList li::before { content: counter(leaderboard); position:absolute; left:18px; top:50%; transform: translateY(-50%); width:24px; height:24px; background:#6c757d; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
+    #complianceList li:hover { transform: translateX(4px); }
+    #complianceList li:nth-child(1){ background:linear-gradient(135deg,#ffd700 0%,#ffed4e 100%); border-left-color:#f39c12; }
+    #complianceList li:nth-child(1)::before{ background:#f39c12; content:"🥇"; font-size:16px; }
+    #complianceList li:nth-child(2){ background:linear-gradient(135deg,#c0c0c0 0%,#e0e0e0 100%); border-left-color:#95a5a6; }
+    #complianceList li:nth-child(2)::before{ background:#95a5a6; content:"🥈"; font-size:16px; }
+    #complianceList li:nth-child(3){ background:linear-gradient(135deg,#cd7f32 0%,#e69f6e 100%); border-left-color:#d35400; }
+    #complianceList li:nth-child(3)::before{ background:#d35400; content:"🥉"; font-size:16px; }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome, <span id="supervisorName">Supervisor</span>!</h1>
-        <button class="logoutBtn" onclick="logout()">Logout</button>
-    </header>
+  <header>
+    <h1>Welcome, <span id="supervisorName">Supervisor</span>!</h1>
+    <button class="logoutBtn" onclick="logout()">Logout</button>
+  </header>
 
-    <main>
-        <!-- Hazard Reports -->
-        <section id="hazardReports">
-            <h2> Hazard Reports</h2>
-            <ul id="hazardList">
-                <!-- Reports will appear here -->
-            </ul>
-        </section>
+  <main>
+    <!-- NEW: Live Worker Map -->
+    <section id="liveMapSection">
+      <h2>🗺️ Live Worker Map</h2>
+      <div id="liveMap"></div>
+      <div class="legend">
+        <span class="pill safe">🟢 Safe</span>
+        <span class="pill warn">🟡 Near hazard</span>
+        <span class="pill danger">🔴 Hazard breach</span>
+        <span style="margin-left:auto;font-size:12px;color:#64748b">Updates every <span id="tickSec">3</span>s</span>
+      </div>
+    </section>
 
-        <!-- Worker Compliance / Leaderboard -->
-        <section id="workerCompliance">
-            <h2> Worker Leaderboard</h2>
-            <ol id="complianceList">
-                <!-- Leaderboard will appear here -->
-            </ol>
-        </section>
+    <!-- Hazard Reports -->
+    <section id="hazardReports">
+      <h2>⚠️ Hazard Reports</h2>
+      <ul id="hazardList"></ul>
+    </section>
 
-        <!-- Analytics / Charts -->
-        <section id="analytics">
-            <h2> Safety Analytics</h2>
-            <canvas id="pointsChart"></canvas>
-        </section>
+    <!-- Worker Compliance / Leaderboard -->
+    <section id="workerCompliance">
+      <h2>🏅 Worker Leaderboard</h2>
+      <ol id="complianceList"></ol>
+    </section>
 
-        <section id="analyticsTrends">
-            <h2> Daily/Weekly Trends</h2>
-            <canvas id="trendsChart"></canvas>
-        </section>
+    <!-- Analytics / Charts -->
+    <section id="analytics">
+      <h2>📊 Safety Analytics</h2>
+      <canvas id="pointsChart"></canvas>
+    </section>
 
-        <section id="hazardHeatmap">
-            <h2> Hazard Heatmap</h2>
-            <canvas id="heatmapChart"></canvas>
-        </section>
-    </main>
+    <section id="analyticsTrends">
+      <h2>📈 Daily/Weekly Trends</h2>
+      <canvas id="trendsChart"></canvas>
+    </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   <script>
-        // Check authentication
-        const username = sessionStorage.getItem('username');
-        const role = sessionStorage.getItem('role');
-        
-        if (!username || role !== 'supervisor') {
-            window.location.href = 'index.html';
-        }
+    <section id="hazardHeatmap">
+      <h2>🔥 Hazard Heatmap</h2>
+      <canvas id="heatmapChart"></canvas>
+    </section>
+  </main>
 
-        // Load username
-        document.getElementById('supervisorName').innerText = username;
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-        // Sample data
-        let hazardReports = [
-            {worker: 'Worker A', desc: 'Loose rock in pit', file: ''},
-            {worker: 'Worker B', desc: 'Wet floor near drill area', file: 'wet_floor.jpg'},
-            {worker: 'Worker C', desc: 'Broken safety barrier', file: ''}
-        ];
+  <script>
+    // -------------------- AUTH --------------------
+    const username = sessionStorage.getItem('username');
+    const role = sessionStorage.getItem('role');
+    if (!username || role !== 'supervisor') { window.location.href = 'index.html'; }
+    document.getElementById('supervisorName').innerText = username || 'Supervisor';
 
-        let compliancePoints = [
-            {worker: 'Worker A', points: 50},
-            {worker: 'Worker B', points: 40},
-            {worker: 'Worker C', points: 30},
-            {worker: 'Worker D', points: 20}
-        ];
+    // -------------------- SAMPLE DATA (existing) --------------------
+    let hazardReports = [
+      {worker: 'Worker A', desc: 'Loose rock in pit', file: ''},
+      {worker: 'Worker B', desc: 'Wet floor near drill area', file: 'wet_floor.jpg'},
+      {worker: 'Worker C', desc: 'Broken safety barrier', file: ''}
+    ];
+    let compliancePoints = [
+      {worker: 'Worker A', points: 50},
+      {worker: 'Worker B', points: 40},
+      {worker: 'Worker C', points: 30},
+      {worker: 'Worker D', points: 20}
+    ];
 
-        // Populate Hazard Reports
-        const hazardList = document.getElementById('hazardList');
-        if (hazardReports.length === 0) {
-            hazardList.innerHTML = '<div class="empty-state">No hazard reports yet</div>';
-        } else {
-            hazardReports.forEach(report => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <strong>${report.worker}:</strong> ${report.desc}
-                    ${report.file ? `<div class="file-attachment">${report.file}</div>` : ''}
-                `;
-                hazardList.appendChild(li);
-            });
-        }
+    // -------------------- POPULATE UI (existing) --------------------
+    const hazardList = document.getElementById('hazardList');
+    if (hazardReports.length === 0) {
+      hazardList.innerHTML = '<div class="empty-state">No hazard reports yet</div>';
+    } else {
+      hazardReports.forEach(report => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${report.worker}:</strong> ${report.desc} ${report.file ? `<div class="file-attachment">${report.file}</div>` : ''}`;
+        hazardList.appendChild(li);
+      });
+    }
 
-        // Populate Leaderboard
-        const complianceList = document.getElementById('complianceList');
-        if (compliancePoints.length === 0) {
-            complianceList.innerHTML = '<div class="empty-state">No worker data available</div>';
-        } else {
-            compliancePoints.forEach(w => {
-                const li = document.createElement('li');
-                li.textContent = `${w.worker} - ${w.points} points`;
-                complianceList.appendChild(li);
-            });
-        }
+    const complianceList = document.getElementById('complianceList');
+    if (compliancePoints.length === 0) {
+      complianceList.innerHTML = '<div class="empty-state">No worker data available</div>';
+    } else {
+      compliancePoints.forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = `${w.worker} - ${w.points} points`;
+        complianceList.appendChild(li);
+      });
+    }
 
-        // Safety Analytics Chart
-        const ctxPoints = document.getElementById('pointsChart').getContext('2d');
-        const pointsChart = new Chart(ctxPoints, {
-            type: 'bar',
-            data: {
-                labels: compliancePoints.map(w => w.worker),
-                datasets: [{
-                    label: 'Points Earned',
-                    data: compliancePoints.map(w => w.points),
-                    backgroundColor: [
-                        'rgba(52, 152, 219, 0.8)',
-                        'rgba(46, 204, 113, 0.8)',
-                        'rgba(155, 89, 182, 0.8)',
-                        'rgba(241, 196, 15, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(52, 152, 219, 1)',
-                        'rgba(46, 204, 113, 1)',
-                        'rgba(155, 89, 182, 1)',
-                        'rgba(241, 196, 15, 1)'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
+    // -------------------- CHARTS (existing) --------------------
+    const ctxPoints = document.getElementById('pointsChart').getContext('2d');
+    const pointsChart = new Chart(ctxPoints, {
+      type: 'bar',
+      data: {
+        labels: compliancePoints.map(w => w.worker),
+        datasets: [{
+          label: 'Points Earned',
+          data: compliancePoints.map(w => w.points),
+          backgroundColor: [
+            'rgba(52, 152, 219, 0.8)', 'rgba(46, 204, 113, 0.8)', 'rgba(155, 89, 182, 0.8)', 'rgba(241, 196, 15, 0.8)'
+          ],
+          borderColor: [
+            'rgba(52, 152, 219, 1)', 'rgba(46, 204, 113, 1)', 'rgba(155, 89, 182, 1)', 'rgba(241, 196, 15, 1)'
+          ], borderWidth: 2, borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: { legend: { display: true, position: 'top' } },
+        scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } }
+      }
+    });
+
+    function loadTrendsChart(){
+      const pointsPerDay = {}; const today = new Date();
+      for (let i=6; i>=0; i--) { const d = new Date(today); d.setDate(d.getDate()-i); const k = d.toLocaleDateString('en-US', {month:'short', day:'numeric'}); pointsPerDay[k] = Math.floor(Math.random()*40)+30; }
+      const labels = Object.keys(pointsPerDay); const data = Object.values(pointsPerDay);
+      const ctx = document.getElementById('trendsChart').getContext('2d'); if (window.trendsChart) window.trendsChart.destroy();
+      window.trendsChart = new Chart(ctx, { type:'line', data: { labels, datasets:[{ label:'Total Points per Day', data, borderColor:'rgba(75,192,192,1)', backgroundColor:'rgba(75,192,192,.2)', tension:.4, fill:true, borderWidth:3, pointRadius:6, pointBackgroundColor:'rgba(75,192,192,1)', pointBorderColor:'#fff', pointBorderWidth:2, pointHoverRadius:8 }]}, options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ display:true, position:'top' } }, scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' } }, x:{ grid:{ display:false } } } } });
+    }
+
+    function loadHazardHeatmap(){
+      const zones=['Zone A','Zone B','Zone C','Zone D']; const zoneCounts = zones.map(()=> Math.floor(Math.random()*15)+1);
+      const ctx = document.getElementById('heatmapChart').getContext('2d'); if (window.heatmapChart) window.heatmapChart.destroy();
+      window.heatmapChart = new Chart(ctx, { type:'bar', data:{ labels:zones, datasets:[{ label:'Hazards Reported', data:zoneCounts, backgroundColor:['rgba(231,76,60,.8)','rgba(230,126,34,.8)','rgba(241,196,15,.8)','rgba(46,204,113,.8)'], borderColor:['rgba(231,76,60,1)','rgba(230,126,34,1)','rgba(241,196,15,1)','rgba(46,204,113,1)'], borderWidth:2, borderRadius:6 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ display:true, position:'top' } }, scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ stepSize:1 } }, x:{ grid:{ display:false } } } } });
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{ loadTrendsChart(); loadHazardHeatmap(); setInterval(()=>{ loadTrendsChart(); loadHazardHeatmap(); }, 10000); });
+
+    function logout(){ sessionStorage.clear(); window.location.href='index.html'; }
+
+    // -------------------- LIVE MAP (Leaflet) --------------------
+    (function(){
+      const tickMs = 3000; // update interval
+      document.getElementById('tickSec').textContent = (tickMs/1000).toString();
+
+      // Site center (example: Googleplex area) – change to your site
+      const SITE_CENTER = { lat: 37.422, lng: -122.084 };
+
+      // Hazard zones (center + radius in meters)
+      const HAZARD_ZONES = [
+        { id: 'hz-1', name: 'Crane Lift Zone', center: { lat: 37.4227, lng: -122.085 }, radius: 120 },
+        { id: 'hz-2', name: 'Fuel Storage', center: { lat: 37.4214, lng: -122.0835 }, radius: 90 },
+      ];
+
+      // Demo worker seeds
+      const workers = [
+        { id: 'W-101', name: 'Ava Patel', role: 'Welder', position: jitter(SITE_CENTER, 60) },
+        { id: 'W-202', name: 'Liam Chen', role: 'Rigger', position: jitter(SITE_CENTER, 80) },
+        { id: 'W-303', name: 'Sara Khan', role: 'Electrician', position: jitter(SITE_CENTER, 100) },
+        { id: 'W-404', name: 'Diego Ruiz', role: 'Operator', position: jitter(SITE_CENTER, 120) },
+      ];
+
+      // Map init
+      const map = L.map('liveMap');
+      const tile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' });
+      tile.addTo(map);
+
+      // Fit bounds to hazards + workers
+      function allPoints(){
+        return [ ...workers.map(w=>[w.position.lat, w.position.lng]), ...HAZARD_ZONES.map(z=>[z.center.lat, z.center.lng]) ];
+      }
+      map.fitBounds(allPoints(), { padding: [40,40] });
+
+      // Draw hazards
+      const hazardLayers = HAZARD_ZONES.map(z => L.circle([z.center.lat, z.center.lng], { radius: z.radius, color: '#ef4444', fillColor: '#ef4444', fillOpacity: .08, weight: 2 }).addTo(map).bindPopup(`<b>${z.name}</b><br>Radius: ${z.radius} m`));
+
+      // Worker markers
+      const markers = new Map();
+      function ensureMarker(worker){
+        if (markers.has(worker.id)) return markers.get(worker.id);
+        const marker = L.circleMarker([worker.position.lat, worker.position.lng], { radius: 9, color: '#22c55e', fillColor: '#22c55e', fillOpacity: .9, weight: 2 })
+          .addTo(map)
+          .bindPopup(renderPopup(worker));
+        markers.set(worker.id, marker);
+        return marker;
+      }
+
+      function renderPopup(w){
+        const status = getStatus(w.position);
+        return `<div style="min-width:180px">
+          <div style="font-weight:600">${w.name} · ${w.id}</div>
+          <div style="font-size:12px;color:#6b7280">${w.role}</div>
+          <div style="margin-top:6px">${status.emoji} ${status.text}</div>
+        </div>`;
+      }
+
+      function updateMarker(worker){
+        const m = ensureMarker(worker);
+        m.setLatLng([worker.position.lat, worker.position.lng]);
+        const status = getStatus(worker.position);
+        m.setStyle({
+          color: status.color,
+          fillColor: status.color,
+          fillOpacity: .9,
+          weight: 2
         });
+        m.setPopupContent(renderPopup(worker));
+      }
 
-        // Daily/Weekly Trends Chart
-        function loadTrendsChart() {
-            const pointsPerDay = {};
-            const today = new Date();
-            
-            // Generate data for last 7 days
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                pointsPerDay[dateStr] = Math.floor(Math.random() * 40) + 30;
-            }
+      // Simulation loop
+      function tick(){
+        workers.forEach(w => { w.position = stepPosition(w.position); updateMarker(w); });
+      }
+      // Prime markers
+      workers.forEach(updateMarker);
 
-            const labels = Object.keys(pointsPerDay);
-            const data = Object.values(pointsPerDay);
+      // Run
+      setInterval(tick, tickMs);
 
-            const ctx = document.getElementById('trendsChart').getContext('2d');
-            if(window.trendsChart) window.trendsChart.destroy();
-            
-            window.trendsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Total Points per Day',
-                        data: data,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.4,
-                        fill: true,
-                        borderWidth: 3,
-                        pointRadius: 6,
-                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
+      // --------------- helpers ---------------
+      function jitter(base, meters){
+        const latOffset = (Math.random()-0.5) * (meters/111111);
+        const lngOffset = (Math.random()-0.5) * (meters/(111111 * Math.cos(base.lat * Math.PI/180)));
+        return { lat: base.lat + latOffset, lng: base.lng + lngOffset };
+      }
+      function distanceMeters(a,b){
+        const R=6371000; const toRad = x=> x*Math.PI/180;
+        const dLat = toRad(b.lat - a.lat); const dLng = toRad(b.lng - a.lng);
+        const lat1 = toRad(a.lat); const lat2 = toRad(b.lat);
+        const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+        return 2*R*Math.asin(Math.sqrt(h));
+      }
+      function getStatus(position){
+        let minDelta = Infinity; let breached = null;
+        for (const z of HAZARD_ZONES){
+          const d = distanceMeters(position, z.center);
+          minDelta = Math.min(minDelta, d - z.radius);
+          if (d <= z.radius) breached = z;
         }
-
-        // Hazard Heatmap Chart
-        function loadHazardHeatmap() {
-            const zones = ['Zone A', 'Zone B', 'Zone C', 'Zone D'];
-            const zoneCounts = zones.map(() => Math.floor(Math.random() * 15) + 1);
-
-            const ctx = document.getElementById('heatmapChart').getContext('2d');
-            if(window.heatmapChart) window.heatmapChart.destroy();
-            
-            window.heatmapChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: zones,
-                    datasets: [{
-                        label: 'Hazards Reported',
-                        data: zoneCounts,
-                        backgroundColor: [
-                            'rgba(231, 76, 60, 0.8)',
-                            'rgba(230, 126, 34, 0.8)',
-                            'rgba(241, 196, 15, 0.8)',
-                            'rgba(46, 204, 113, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(231, 76, 60, 1)',
-                            'rgba(230, 126, 34, 1)',
-                            'rgba(241, 196, 15, 1)',
-                            'rgba(46, 204, 113, 1)'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Initialize charts
-        loadTrendsChart();
-        loadHazardHeatmap();
-
-        // Auto-refresh charts every 10 seconds
-        setInterval(() => {
-            loadTrendsChart();
-            loadHazardHeatmap();
-        }, 10000);
-
-        // Logout function
-        function logout() {
-            sessionStorage.clear();
-            window.location.href = 'index.html';
-        }
-
-       // Daily/Weekly Trends Chart
-function loadTrendsChart() {
-    const pointsPerDay = {};
-    const today = new Date();
-    
-    // Generate data for last 7 days
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        // Random data between 30-70 points per day
-        pointsPerDay[dateStr] = Math.floor(Math.random() * 40) + 30;
-    }
-
-    const labels = Object.keys(pointsPerDay);
-    const data = Object.values(pointsPerDay);
-
-    const ctx = document.getElementById('trendsChart').getContext('2d');
-    
-    // Destroy existing chart if it exists
-    if(window.trendsChart) {
-        window.trendsChart.destroy();
-    }
-    
-    window.trendsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Total Points per Day',
-                data: data,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.4,
-                fill: true,
-                borderWidth: 3,
-                pointRadius: 6,
-                pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
-                            size: 14,
-                            weight: 'bold'
-                        }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14
-                    },
-                    bodyFont: {
-                        size: 13
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Points',
-                        font: {
-                            size: 13,
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Date',
-                        font: {
-                            size: 13,
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Hazard Heatmap Chart
-function loadHazardHeatmap() {
-    const zones = ['Zone A', 'Zone B', 'Zone C', 'Zone D'];
-    // Generate random hazard counts for each zone (1-15 hazards)
-    const zoneCounts = zones.map(() => Math.floor(Math.random() * 15) + 1);
-
-    const ctx = document.getElementById('heatmapChart').getContext('2d');
-    
-    // Destroy existing chart if it exists
-    if(window.heatmapChart) {
-        window.heatmapChart.destroy();
-    }
-    
-    window.heatmapChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: zones,
-            datasets: [{
-                label: 'Hazards Reported',
-                data: zoneCounts,
-                backgroundColor: [
-                    'rgba(231, 76, 60, 0.8)',   // Red - High danger
-                    'rgba(230, 126, 34, 0.8)',  // Orange - Medium danger
-                    'rgba(241, 196, 15, 0.8)',  // Yellow - Low danger
-                    'rgba(46, 204, 113, 0.8)'   // Green - Safe
-                ],
-                borderColor: [
-                    'rgba(231, 76, 60, 1)',
-                    'rgba(230, 126, 34, 1)',
-                    'rgba(241, 196, 15, 1)',
-                    'rgba(46, 204, 113, 1)'
-                ],
-                borderWidth: 2,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
-                            size: 14,
-                            weight: 'bold'
-                        }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        label: function(context) {
-                            return 'Hazards: ' + context.parsed.y;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Number of Hazards',
-                        font: {
-                            size: 13,
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    },
-                    ticks: {
-                        stepSize: 1
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Mine Zones',
-                        font: {
-                            size: 13,
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Initialize charts when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadTrendsChart();
-    loadHazardHeatmap();
-    
-    // Auto-refresh charts every 10 seconds with new random data
-    setInterval(() => {
-        loadTrendsChart();
-        loadHazardHeatmap();
-    }, 10000);
-});
-    </script>
+        if (breached) return { code:'DANGER', text:`Hazard: ${breached.name}`, emoji:'🔴', color:'#ef4444' };
+        if (minDelta <= 25) return { code:'WARN', text:'Near hazard', emoji:'🟡', color:'#f59e0b' };
+        return { code:'SAFE', text:'Safe', emoji:'🟢', color:'#22c55e' };
+      }
+      function stepPosition(pos){
+        const stepMeters = 5 + Math.random()*10; const bearing = Math.random()*Math.PI*2;
+        const dLat = (stepMeters*Math.cos(bearing))/111111;
+        const dLng = (stepMeters*Math.sin(bearing))/(111111*Math.cos(pos.lat*Math.PI/180));
+        let lat = pos.lat + dLat; let lng = pos.lng + dLng;
+        // soft tether to site center
+        const pull = 0.002; lat += (SITE_CENTER.lat - lat)*pull*Math.random(); lng += (SITE_CENTER.lng - lng)*pull*Math.random();
+        return { lat, lng };
+      }
+    })();
+  </script>
 </body>
 </html>
-
-
