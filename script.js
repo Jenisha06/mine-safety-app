@@ -341,6 +341,56 @@ function reportZoneBreach(zoneName) {
     zoneBreaches.push({ worker: username, zone: zoneName, timestamp: now });
     localStorage.setItem("zoneBreaches", JSON.stringify(zoneBreaches));
 }
+// ---------------- Camera PPE Auto Checklist ---------------- //
+
+let model;
+let cameraStream;
+let detectionInterval;
+
+async function startCamera() {
+    const video = document.getElementById('camera');
+    const status = document.getElementById('cameraStatus');
+
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = cameraStream;
+        status.innerText = "Camera started, loading AI model...";
+
+        model = await cocoSsd.load();
+        status.innerText = "Model loaded. Show your PPE items to the camera.";
+
+        // Run detection every 1 second
+        detectionInterval = setInterval(() => detectPPE(video), 1000);
+
+    } catch (err) {
+        status.innerText = "Camera access denied or error.";
+        console.error(err);
+    }
+}
+
+function detectPPE(video) {
+    model.detect(video).then(predictions => {
+        predictions.forEach(pred => {
+            const item = pred.class.toLowerCase();
+
+            // Simple demo mapping
+            if (item.includes("person")) markChecklistItem("Helmet on");
+            if (item.includes("backpack")) markChecklistItem("Gloves on");
+            if (item.includes("shoe")) markChecklistItem("Safety boots");
+        });
+    });
+}
+
+function markChecklistItem(text) {
+    const checklistItems = document.querySelectorAll("#checklist ul li");
+    checklistItems.forEach(li => {
+        if (li.innerText.toLowerCase().includes(text.toLowerCase())) {
+            li.querySelector('input').checked = true;
+        }
+    });
+}
+
+
 
 
 
