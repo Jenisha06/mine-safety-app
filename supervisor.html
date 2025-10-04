@@ -154,6 +154,16 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
+<script>
+  // TEMP for debugging: comment these lines so you can load the page directly
+  // const username = sessionStorage.getItem('username');
+  // const role = sessionStorage.getItem('role');
+  // if (!username || role !== 'supervisor') { window.location.href = 'index.html'; }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('supervisorName').innerText =
+      sessionStorage.getItem('username') || 'Supervisor';
+  });
+</script>
 
   <script>
     // -------------------- AUTH --------------------
@@ -363,5 +373,6 @@
   </script>
 </body>
 </html>
+
 
 
