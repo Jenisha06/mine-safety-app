@@ -425,6 +425,17 @@
             <button onclick="submitChecklist()">Submit Checklist</button>
             <div id="checklistSuccess" class="success-message">✓ Checklist submitted successfully!</div>
         </section>
+        <!-- 📸 Camera PPE Auto Check -->
+<section id="cameraCheck">
+  <h2>Camera PPE Auto Check</h2>
+  <video id="camera" autoplay playsinline muted width="320" height="240" style="background:#000;border-radius:8px"></video>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" onclick="startCamera()">Start Camera</button>
+    <button type="button" onclick="stopCamera()">Stop Camera</button>
+  </div>
+  <p id="cameraStatus">Camera not started</p>
+</section>
+
 
         <!-- Video of the Day -->
         <section id="video-of-the-day">
@@ -674,4 +685,5 @@
 </body>
 
 </html>
+
 
