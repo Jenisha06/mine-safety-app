@@ -378,6 +378,8 @@
     <!-- 👇 AI libraries for camera PPE detection -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </head>
 <body>
@@ -414,6 +416,17 @@
             <button onclick="checkWorkerZone()">Check My Location</button>
             <p id="zoneAlert"></p>
         </section>
+        <section id="geofence">
+  <h2>Mine Zone Safety Check</h2>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px">
+    <button type="button" onclick="startLiveTracking()">Start Live Tracking</button>
+    <button type="button" onclick="stopLiveTracking()">Stop Tracking</button>
+    <button type="button" onclick="repaintZones()">Refresh Zone Risk</button>
+  </div>
+  <p id="zoneAlert">Location tracking not started.</p>
+  <div id="zoneMap" style="height:320px; border-radius:10px; overflow:hidden; border:1px solid #e5e5e5"></div>
+</section>
+
 
         <!-- Daily Checklist -->
         <section id="checklist">
@@ -682,6 +695,7 @@
 </body>
 
 </html>
+
 
 
 
