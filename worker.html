@@ -287,7 +287,7 @@
             border-left-color: #d35400;
         }
 
-        video {
+       video {
             width: 100%;
             max-width: 100%;
             border-radius: 12px;
@@ -295,9 +295,29 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
+
         #video-of-the-day {
             grid-column: span 2;
         }
+
 
         .success-message {
             background: #d4edda;
@@ -475,26 +495,23 @@
 </section>
 
 
-<section id="video-of-the-day">
-  <h2> Safety Video of the Day</h2>
-
-  <!-- Responsive 16:9 wrapper -->
-  <div class="yt-wrap">
-    <iframe
-      id="safetyYT"
-      src="https://www.youtube.com/watch?v=osNwXd37Vz4"
-      title="Mine safety training"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-      referrerpolicy="strict-origin-when-cross-origin">
-    </iframe>
-  </div>
-
-  <button onclick="markVideoWatched()">Mark as Watched</button>
-  <div id="videoSuccess" class="success-message">✓ Video marked as watched! +10 points earned</div>
-</section>
-
+<!-- Video of the Day -->
+        <section id="video-of-the-day">
+            <h2>🎥 Safety Video of the Day</h2>
+            <div class="video-wrapper">
+                <iframe
+                    id="safetyYT"
+                    src="https://www.youtube.com/embed/osNwXd37Vz4"
+                    title="Mine safety training"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin">
+                </iframe>
+            </div>
+            <button onclick="markVideoWatched()">Mark as Watched</button>
+            <div id="videoSuccess" class="success-message">✓ Video marked as watched! +10 points earned</div>
+        </section>
 
 
 
@@ -1142,6 +1159,7 @@ window.stopCamera = stopCamera;
 </body>
 
 </html>
+
 
 
 
