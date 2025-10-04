@@ -894,11 +894,72 @@
       }
     });
   }
+    let model;
+let cameraStream;
+let detectionInterval;
+
+async function startCamera() {
+  const video = document.getElementById('camera');
+  const status = document.getElementById('cameraStatus');
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.innerText = "Camera API not supported.";
+    return;
+  }
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = cameraStream;
+    await video.play();
+
+    status.innerText = "Camera started, loading AI model...";
+    if (!model) model = await cocoSsd.load();
+    status.innerText = "Model loaded. Show your PPE items.";
+
+    clearInterval(detectionInterval);
+    detectionInterval = setInterval(() => detectPPE(video), 1000);
+
+  } catch (err) {
+    console.error(err);
+    status.innerText = "Camera error: " + err.message;
+  }
+}
+
+function stopCamera() {
+  const status = document.getElementById('cameraStatus');
+  clearInterval(detectionInterval);
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  status.innerText = "Camera stopped.";
+}
+
+function detectPPE(video) {
+  if (!model) return;
+  model.detect(video).then(predictions => {
+    const seen = predictions.map(p => p.class.toLowerCase());
+    if (seen.includes("person")) markChecklistItem("Helmet");
+    document.getElementById('cameraStatus').innerText = `Detecting: ${seen.slice(0,5).join(", ") || "none"}`;
+  });
+}
+
+function markChecklistItem(text) {
+  const items = document.querySelectorAll("#checklistItems li");
+  items.forEach(li => {
+    if (li.innerText.toLowerCase().includes(text.toLowerCase())) {
+      const cb = li.querySelector('input[type="checkbox"]');
+      if (cb && !cb.checked) cb.checked = true;
+    }
+  });
+}
+
 </script>
 
 </body>
 
 </html>
+
 
 
 
