@@ -457,16 +457,23 @@
 </section>
 
 
-        <!-- Video of the Day -->
-        <section id="video-of-the-day">
-            <h2>🎥 Video of the Day</h2>
-            <video id="safetyVideo" controls>
-                <source src="videos/sample.mp4" type="video/mp4">
-                Your browser does not support HTML5 video.
-            </video>
-            <button onclick="markVideoWatched()">Mark as Watched</button>
-            <div id="videoSuccess" class="success-message">✓ Video marked as watched! +10 points earned</div>
-        </section>
+<section id="video-of-the-day">
+  <h2>🎥 Safety Video of the Day</h2>
+  <div class="video-container">
+    <iframe 
+      id="safetyVideo" 
+      src="https://www.youtube.com/watch?v=Y7MnjcxxUDw" 
+      title="Safety Training Video" 
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen>
+    </iframe>
+  </div>
+  <button onclick="markVideoWatched()">Mark as Watched</button>
+  <div id="videoSuccess" class="success-message">✓ Video marked as watched! +10 points earned</div>
+</section>
+
+
 
         <!-- Hazard Reporting -->
         <section id="hazard-report">
@@ -940,6 +947,7 @@ window.stopCamera = stopCamera;
 </body>
 
 </html>
+
 
 
 
