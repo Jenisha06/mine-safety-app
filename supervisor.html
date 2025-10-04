@@ -242,6 +242,9 @@
             font-style: italic;
         }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 </head>
 <body>
     <header>
@@ -265,6 +268,16 @@
                 <!-- Reports will appear here -->
             </ul>
         </section>
+        <section id="liveMap">
+  <h2>Live Worker Map & Zone Risk</h2>
+  <div id="supervisorMap" style="height:360px; border-radius:10px; overflow:hidden; border:1px solid #e5e5e5"></div>
+</section>
+
+<section id="breachFeed">
+  <h2>Zone Breach Alerts</h2>
+  <ul id="breachList"><li>No breaches yet.</li></ul>
+</section>
+
 
         <section id="integratedLeaderboard">
     <h2>Worker Engagement & Safety Compliance</h2>
@@ -560,5 +573,6 @@ setInterval(loadIntegratedLeaderboard, 5000);
 </body>
 
 </html>
+
 
 
