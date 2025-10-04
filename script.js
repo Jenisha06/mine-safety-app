@@ -422,6 +422,160 @@ function markChecklistItem(text) {
     }
   });
 }
+// ================== LIVE GEOFENCE + MAP (WORKER) ================== //
+// Zones as circles (easy geofence + easy map). Replace coords with real mine data.
+const hazardZones = [
+  { name: "Blasting Zone", lat: 19.125, lon: 84.125, radius: 120, baseRisk: "HIGH" },
+  { name: "Heavy Machinery", lat: 19.123, lon: 84.123, radius: 140, baseRisk: "MEDIUM" },
+  { name: "Storage Yard",   lat: 19.127, lon: 84.128, radius: 100, baseRisk: "LOW" }
+];
+
+// Globals
+let workerMap, workerMarker, zoneCircles = [];
+let watchId = null;
+
+// Haversine distance in meters
+function distMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Compute dynamic risk from hazard counts
+function zoneRiskWithHazards(zone) {
+  const reports = JSON.parse(localStorage.getItem("hazardReports") || "[]");
+  // assign report to nearest zone
+  let count = 0;
+  reports.forEach(r => {
+    // if your reports have lat/lon add them; for now we simulate nearest by random or skip
+    // fallback: bucket evenly so demo still moves:
+    // count++;  // uncomment if you want a rising risk demo without coords
+  });
+
+  // Simple thresholds (tune as needed)
+  const base = zone.baseRisk;
+  if (count >= 6) return "HIGH";
+  if (count >= 3) return base === "LOW" ? "MEDIUM" : base; 
+  return base;
+}
+
+function riskColor(level) {
+  return level === "HIGH" ? "#d90429" : level === "MEDIUM" ? "#ffb703" : "#2a9d8f";
+}
+
+function initWorkerMap() {
+  if (workerMap) return;
+  workerMap = L.map('zoneMap').setView([hazardZones[0].lat, hazardZones[0].lon], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(workerMap);
+
+  // Draw zones
+  paintZones();
+
+  // Worker marker
+  workerMarker = L.marker([hazardZones[0].lat, hazardZones[0].lon]).addTo(workerMap);
+  workerMarker.bindTooltip("Your position");
+}
+
+function paintZones() {
+  // Clear old
+  zoneCircles.forEach(c => workerMap.removeLayer(c));
+  zoneCircles = [];
+
+  hazardZones.forEach(z => {
+    const level = zoneRiskWithHazards(z);
+    const circle = L.circle([z.lat, z.lon], {
+      radius: z.radius,
+      color: riskColor(level),
+      fillColor: riskColor(level),
+      fillOpacity: 0.25,
+      weight: 2
+    }).addTo(workerMap);
+    circle.bindTooltip(`${z.name} — Risk: ${level}`);
+    zoneCircles.push(circle);
+  });
+}
+
+function repaintZones() {
+  if (!workerMap) return;
+  paintZones();
+  speakText?.("Zone risk overlays updated.");
+}
+
+function startLiveTracking() {
+  initWorkerMap();
+  if (!navigator.geolocation) {
+    document.getElementById("zoneAlert").innerText = "Geolocation not supported.";
+    return;
+  }
+  if (watchId) navigator.geolocation.clearWatch(watchId);
+
+  document.getElementById("zoneAlert").innerText = "Tracking started. Stay safe.";
+  speakText?.("Live tracking started.");
+
+  watchId = navigator.geolocation.watchPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    workerMarker.setLatLng([lat, lon]);
+    workerMap.setView([lat, lon], workerMap.getZoom());
+
+    // Persist worker location for supervisor
+    const username = localStorage.getItem('username') || 'Worker';
+    localStorage.setItem(`workerLocation_${username}`, JSON.stringify({
+      user: username, lat, lon, ts: Date.now()
+    }));
+
+    // Geofence check
+    let message = "You are in a safe zone.";
+    let breached = null;
+    hazardZones.forEach(z => {
+      const d = distMeters(lat, lon, z.lat, z.lon);
+      if (d <= z.radius) {
+        const risk = zoneRiskWithHazards(z);
+        message = `⚠️ ${z.name} — ${risk} risk area`;
+        if (risk !== "LOW") breached = { zone: z, risk, distance: Math.round(d) };
+      }
+    });
+
+    document.getElementById("zoneAlert").innerText = message;
+
+    // If breach, speak + push to supervisor once per entry (debounce via lastBreach key)
+    if (breached) {
+      const lastKey = `lastBreach_${username}_${breached.zone.name}`;
+      const lastTs = parseInt(localStorage.getItem(lastKey) || "0", 10);
+      const now = Date.now();
+      if (!lastTs || now - lastTs > 60_000) { // 60s cooldown per zone
+        speakText?.(`Warning. You are entering ${breached.zone.name}. ${breached.risk} risk area.`);
+        // push to supervisor
+        const events = JSON.parse(localStorage.getItem("breachEvents") || "[]");
+        events.push({
+          user: username,
+          zone: breached.zone.name,
+          risk: breached.risk,
+          lat, lon,
+          time: new Date().toLocaleString()
+        });
+        localStorage.setItem("breachEvents", JSON.stringify(events));
+        localStorage.setItem(lastKey, String(now));
+      }
+    }
+  }, err => {
+    console.error(err);
+    document.getElementById("zoneAlert").innerText = "Location error. Check permissions/GPS.";
+  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+}
+
+function stopLiveTracking() {
+  if (watchId) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  document.getElementById("zoneAlert").innerText = "Tracking stopped.";
+  speakText?.("Live tracking stopped.");
+}
+
+
 
 
 
