@@ -395,9 +395,8 @@
         <h1> Welcome, <span id="workerName">Worker</span>!</h1>
         <button class="logoutBtn" onclick="logout()">Logout</button>
     </header>
-
-    <main>
-        <!-- Settings -->
+  <!-- Settings -->
+    <div class="langandrole">
         <section id="settings">
             <div>
                 <label for="language">🌐 Choose Language:</label>
@@ -407,8 +406,7 @@
                     <option value="te">తెలుగు</option>
                 </select>
             </div>
-            
-            <div>
+                  <div>
                 <label for="roleType">👨‍🔧 Select Role:</label>
                 <select id="roleType" onchange="updateChecklistRole()">
                     <option value="drill">Drill Operator</option>
@@ -417,6 +415,13 @@
                 </select>
             </div>
         </section>
+
+        </div>
+    
+    <main>
+      
+            
+      
 
         <!-- Geofence (single, de-duplicated) -->
         <section id="geofence">
@@ -840,6 +845,7 @@
 </body>
 
 </html>
+
 
 
 
