@@ -358,30 +358,27 @@ async function startCamera() {
   }
 
   try {
-    // Start video
     cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
     video.srcObject = cameraStream;
-    await video.play(); // ensure playback (muted + user gesture helps on mobile)
+    await video.play();
     status.innerText = "Camera started, loading AI model...";
 
-    // Load model once
     if (!model) {
       model = await cocoSsd.load();
     }
-    status.innerText = "Model loaded. Show PPE to the camera.";
+    status.innerText = "Model loaded. Show your PPE items to the camera.";
 
-    // Start detection loop
     clearInterval(detectionInterval);
     detectionInterval = setInterval(() => detectPPE(video), 1000);
 
   } catch (err) {
     console.error(err);
     if (err.name === "NotAllowedError") {
-      status.innerText = "Permission denied. Enable camera access in browser settings.";
+      status.innerText = "Permission denied. Allow camera in browser settings.";
     } else if (err.name === "NotFoundError") {
-      status.innerText = "No camera found on this device.";
+      status.innerText = "No camera found.";
     } else if (window.location.protocol !== "http:" && window.location.protocol !== "https:") {
-      status.innerText = "Run from http://localhost or https:// (not file://).";
+      status.innerText = "Run this page from http://localhost or https://";
     } else {
       status.innerText = "Camera error. See console for details.";
     }
@@ -401,15 +398,13 @@ function stopCamera() {
 function detectPPE(video) {
   if (!model) return;
   model.detect(video).then(predictions => {
-    // For demo: map common detections to PPE checklist items.
-    // Replace with a real helmet/glove model later for accuracy.
     const seen = predictions.map(p => p.class.toLowerCase());
 
+    // Demo mappings (simple for hackathon)
     if (seen.includes("person")) markChecklistItem("Helmet on");
     if (seen.includes("backpack") || seen.includes("handbag") || seen.includes("suitcase")) markChecklistItem("Gloves on");
     if (seen.includes("shoe")) markChecklistItem("Safety boots");
 
-    // Optional: show status
     document.getElementById('cameraStatus').innerText =
       `Detecting... found: ${seen.slice(0,5).join(", ") || "none"}`;
   }).catch(err => {
