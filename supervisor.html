@@ -473,7 +473,34 @@
         function logout(){
             window.location.href = 'index.html';
         }
+
+        function loadZoneAlerts() {
+    const alertsContainer = document.getElementById("activeAlerts");
+    alertsContainer.innerHTML = "";
+
+    const zoneBreaches = JSON.parse(localStorage.getItem("zoneBreaches") || "[]");
+
+    if(zoneBreaches.length === 0){
+        const li = document.createElement('li');
+        li.textContent = "No active alerts.";
+        alertsContainer.appendChild(li);
+        return;
+    }
+
+    zoneBreaches.forEach(breach => {
+        const li = document.createElement('li');
+        const time = new Date(breach.timestamp).toLocaleTimeString();
+        li.textContent = `${time} - ${breach.worker} entered ${breach.zone}`;
+        alertsContainer.appendChild(li);
+    });
+}
+
+// Call on page load and auto-refresh every 5 seconds
+loadZoneAlerts();
+setInterval(loadZoneAlerts, 5000);
+
     </script>
 </body>
 
 </html>
+
