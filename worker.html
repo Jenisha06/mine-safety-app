@@ -15,7 +15,8 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+           background: linear-gradient(to bottom right, #2C3D73, #1B1B1B);
+
             min-height: 100vh;
             color: #333;
             padding-bottom: 40px;
@@ -46,19 +47,20 @@
             }
         }
 
-        header h1 {
-            font-size: 24px;
-            color: #667eea;
-            font-weight: 700;
-        }
+      header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2C3D73;
+  letter-spacing: 0.5px;
+}
 
-        header h1 span {
-            color: #764ba2;
-            font-weight: 800;
-        }
+     header h1 span {
+  color: #FF6B01; /* Safety Orange for emphasis */
+  font-weight: 800;
+}
 
         .logoutBtn {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+             background-color: #e74c3c;
             color: white;
             border: none;
             padding: 10px 24px;
@@ -72,7 +74,7 @@
 
         .logoutBtn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+              box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
         }
 
         main {
@@ -98,7 +100,18 @@
             transform: translateY(-4px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
+@media (max-width: 600px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px 20px;
+  }
 
+  header h1 {
+    font-size: 20px;
+  }
+}
+        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -832,3 +845,4 @@
 </body>
 
 </html>
+
