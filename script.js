@@ -307,14 +307,16 @@ function checkWorkerZone() {
             let alertMessage = "You are in a safe zone.";
             let inHazard = false;
 
-            hazardZones.forEach(zone => {
-                const distance = getDistanceFromLatLonInMeters(lat, lon, zone.lat, zone.lon);
-                if(distance <= zone.radius){
-                    alertMessage = `⚠️ You are entering ${zone.name}, a high-risk area!`;
-                    inHazard = true;
-                    speakText(alertMessage); // Voice alert
-                }
-            });
+          hazardZones.forEach(zone => {
+    const distance = getDistanceFromLatLonInMeters(lat, lon, zone.lat, zone.lon);
+    if(distance <= zone.radius){
+        alertMessage = `⚠️ You are entering ${zone.name}, a high-risk area!`;
+        inHazard = true;
+        speakText(alertMessage);
+        reportZoneBreach(zone.name); // log breach
+    }
+});
+
 
             document.getElementById("zoneAlert").innerText = alertMessage;
 
@@ -425,6 +427,7 @@ function markChecklistItem(text) {
     }
   });
 }
+
 
 
 
