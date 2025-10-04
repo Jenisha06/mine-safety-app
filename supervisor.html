@@ -232,30 +232,90 @@
       }
     });
 
-    function loadTrendsChart(){
-      const pointsPerDay = {}; const today = new Date();
-      for (let i=6; i>=0; i--) { const d = new Date(today); d.setDate(d.getDate()-i); const k = d.toLocaleDateString('en-US', {month:'short', day:'numeric'}); pointsPerDay[k] = Math.floor(Math.random()*40)+30; }
-      const labels = Object.keys(pointsPerDay); const data = Object.values(pointsPerDay);
-      const ctx = document.getElementById('trendsChart').getContext('2d');
-if (window.trendsChartInstance) window.trendsChartInstance.destroy();
-window.trendsChartInstance = new Chart(ctx, { /* ... (unchanged) ... */ });
-
-    }
-
-    function loadHazardHeatmap(){
-      const zones=['Zone A','Zone B','Zone C','Zone D']; const zoneCounts = zones.map(()=> Math.floor(Math.random()*15)+1);
-     const ctx = document.getElementById('heatmapChart').getContext('2d');
-if (window.heatmapChartInstance) window.heatmapChartInstance.destroy();
-window.heatmapChartInstance = new Chart(ctx, { /* ... (unchanged) ... */ });
+   function loadTrendsChart(){
+  const pointsPerDay = {}; const today = new Date();
+  for (let i=6; i>=0; i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const k = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    pointsPerDay[k] = Math.floor(Math.random()*40)+30;
   }
-(function initChartsNow() {
-  loadTrendsChart();
-  loadHazardHeatmap();
-  setInterval(() => {
+  const labels = Object.keys(pointsPerDay);
+  const data = Object.values(pointsPerDay);
+  const ctx = document.getElementById('trendsChart').getContext('2d');
+
+  // IMPORTANT: use a name that won't collide with the canvas element ID
+  if (window.trendsChartInstance && typeof window.trendsChartInstance.destroy === 'function') {
+    window.trendsChartInstance.destroy();
+  }
+  window.trendsChartInstance = new Chart(ctx, {
+    type:'line',
+    data: {
+      labels,
+      datasets:[{
+        label:'Total Points per Day', data,
+        borderColor:'rgba(75,192,192,1)',
+        backgroundColor:'rgba(75,192,192,.2)',
+        tension:.4, fill:true, borderWidth:3,
+        pointRadius:6, pointBackgroundColor:'rgba(75,192,192,1)',
+        pointBorderColor:'#fff', pointBorderWidth:2, pointHoverRadius:8
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{ display:true, position:'top' } },
+      scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' } },
+               x:{ grid:{ display:false } } }
+    }
+  });
+}
+function loadHazardHeatmap(){
+  const zones=['Zone A','Zone B','Zone C','Zone D'];
+  const zoneCounts = zones.map(()=> Math.floor(Math.random()*15)+1);
+  const ctx = document.getElementById('heatmapChart').getContext('2d');
+
+  // IMPORTANT: same idea — new, non-colliding instance name
+  if (window.heatmapChartInstance && typeof window.heatmapChartInstance.destroy === 'function') {
+    window.heatmapChartInstance.destroy();
+  }
+  window.heatmapChartInstance = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:zones,
+      datasets:[{
+        label:'Hazards Reported',
+        data:zoneCounts,
+        backgroundColor:[
+          'rgba(231,76,60,.8)','rgba(230,126,34,.8)',
+          'rgba(241,196,15,.8)','rgba(46,204,113,.8)'
+        ],
+        borderColor:[
+          'rgba(231,76,60,1)','rgba(230,126,34,1)',
+          'rgba(241,196,15,1)','rgba(46,204,113,1)'
+        ],
+        borderWidth:2, borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{ display:true, position:'top' } },
+      scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ stepSize:1 } },
+               x:{ grid:{ display:false } } }
+    }
+  });
+}
+    (function initChartsNow() {
+  // run once the page is fully laid out
+  window.addEventListener('load', () => {
     loadTrendsChart();
     loadHazardHeatmap();
-  }, 10000);
+    setInterval(() => {
+      loadTrendsChart();
+      loadHazardHeatmap();
+    }, 10000);
+  });
 })();
+
+
 
     function logout(){ sessionStorage.clear(); window.location.href='index.html'; }
 
@@ -396,4 +456,5 @@ window.heatmapChartInstance = new Chart(ctx, { /* ... (unchanged) ... */ });
   </script>
 </body>
 </html>
+
 
