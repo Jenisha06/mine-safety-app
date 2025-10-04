@@ -410,23 +410,17 @@
             </div>
         </section>
 
-        <!-- Geofence -->
+        <!-- Geofence (single, de-duplicated) -->
         <section id="geofence">
             <h2>📍 Mine Zone Safety Check</h2>
-            <button onclick="checkWorkerZone()">Check My Location</button>
-            <p id="zoneAlert"></p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px">
+                <button type="button" onclick="window.startLiveTracking()">Start Live Tracking</button>
+                <button type="button" onclick="window.stopLiveTracking()">Stop Tracking</button>
+                <button type="button" onclick="window.repaintZones()">Refresh Zone Risk</button>
+            </div>
+            <p id="zoneAlert">Location tracking not started.</p>
+            <div id="zoneMap" style="height:320px; border-radius:10px; overflow:hidden; border:1px solid #e5e5e5"></div>
         </section>
-        <section id="geofence">
-  <h2>Mine Zone Safety Check</h2>
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px">
-    <button type="button" onclick="startLiveTracking()">Start Live Tracking</button>
-    <button type="button" onclick="stopLiveTracking()">Stop Tracking</button>
-    <button type="button" onclick="repaintZones()">Refresh Zone Risk</button>
-  </div>
-  <p id="zoneAlert">Location tracking not started.</p>
-  <div id="zoneMap" style="height:320px; border-radius:10px; overflow:hidden; border:1px solid #e5e5e5"></div>
-</section>
-
 
         <!-- Daily Checklist -->
         <section id="checklist">
@@ -689,14 +683,152 @@
         function logout() {
             window.location.href = 'index.html';
         }
+
+        // ================== LIVE GEOFENCE + MAP (WORKER) — added ================== //
+        const hazardZones = [
+          { name: "Blasting Zone",   lat: 19.125, lon: 84.125, radius: 120, baseRisk: "HIGH" },
+          { name: "Heavy Machinery", lat: 19.123, lon: 84.123, radius: 140, baseRisk: "MEDIUM" },
+          { name: "Storage Yard",    lat: 19.127, lon: 84.128, radius: 100,  baseRisk: "LOW" }
+        ];
+
+        let workerMap, workerMarker, zoneCircles = [];
+        let watchId = null;
+
+        function zoneRiskWithHazards(zone) {
+          // Hook to real hazard data later
+          return zone.baseRisk;
+        }
+        function riskColor(level) {
+          return level === "HIGH" ? "#d90429" : level === "MEDIUM" ? "#ffb703" : "#2a9d8f";
+        }
+        function distMeters(lat1, lon1, lat2, lon2) {
+          const R = 6371000, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+          const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+          return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+        function initWorkerMap() {
+          if (workerMap) return;
+          const container = document.getElementById('zoneMap');
+          if (!container) return;
+
+          workerMap = L.map('zoneMap').setView([hazardZones[0].lat, hazardZones[0].lon], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '&copy; OpenStreetMap'
+          }).addTo(workerMap);
+
+          paintZones();
+
+          workerMarker = L.marker([hazardZones[0].lat, hazardZones[0].lon]).addTo(workerMap);
+          workerMarker.bindTooltip("Your position");
+        }
+        function paintZones() {
+          if (!workerMap) return;
+          zoneCircles.forEach(c => workerMap.removeLayer(c));
+          zoneCircles = [];
+
+          hazardZones.forEach(z => {
+            const level = zoneRiskWithHazards(z);
+            const circle = L.circle([z.lat, z.lon], {
+              radius: z.radius, color: riskColor(level), fillColor: riskColor(level),
+              fillOpacity: 0.25, weight: 2
+            }).addTo(workerMap);
+            circle.bindTooltip(`${z.name} — Risk: ${level}`);
+            zoneCircles.push(circle);
+          });
+        }
+        function updateZoneAlert(text) {
+          const el = document.getElementById("zoneAlert");
+          if (el) {
+            el.className = ""; // reset style
+            el.style.display = "block";
+            el.innerText = text;
+            // colorize based on wording
+            if (text.includes("risk") || text.includes("Warning") || text.includes("⚠️")) {
+              el.classList.add("danger");
+            } else {
+              el.classList.add("safe");
+            }
+          }
+          if (typeof speak === "function") { try { speak(text); } catch(e){} }
+        }
+        function handlePosition(lat, lon) {
+          if (!workerMap) initWorkerMap();
+
+          workerMarker.setLatLng([lat, lon]);
+          workerMap.setView([lat, lon], workerMap.getZoom());
+
+          const username = sessionStorage.getItem('username') || 'Worker';
+          localStorage.setItem(`workerLocation_${username}`, JSON.stringify({ user: username, lat, lon, ts: Date.now() }));
+
+          let message = "You are in a safe zone.";
+          let breached = null;
+
+          hazardZones.forEach(z => {
+            const d = distMeters(lat, lon, z.lat, z.lon);
+            if (d <= z.radius) {
+              const risk = zoneRiskWithHazards(z);
+              message = `⚠️ ${z.name} — ${risk} risk area`;
+              if (risk !== "LOW") breached = { zone: z, risk, distance: Math.round(d) };
+            }
+          });
+
+          updateZoneAlert(message);
+
+          if (breached) {
+            const lastKey = `lastBreach_${username}_${breached.zone.name}`;
+            const lastTs = parseInt(localStorage.getItem(lastKey) || "0", 10);
+            const now = Date.now();
+            if (!lastTs || now - lastTs > 60_000) {
+              const events = JSON.parse(localStorage.getItem("breachEvents") || "[]");
+              events.push({ user: username, zone: breached.zone.name, risk: breached.risk, lat, lon, time: new Date().toLocaleString() });
+              localStorage.setItem("breachEvents", JSON.stringify(events));
+              localStorage.setItem(lastKey, String(now));
+            }
+          }
+        }
+        async function startLiveTracking() {
+          initWorkerMap();
+          if (!('geolocation' in navigator)) {
+            updateZoneAlert("Geolocation not supported.");
+            return;
+          }
+
+          // Trigger permission once (clean prompt)
+          try {
+            await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            });
+          } catch (_) {}
+
+          if (watchId) navigator.geolocation.clearWatch(watchId);
+
+          watchId = navigator.geolocation.watchPosition(
+            pos => handlePosition(pos.coords.latitude, pos.coords.longitude),
+            err => {
+              console.error("watchPosition error", err);
+              updateZoneAlert("Location error: " + (err.message || err.code));
+            },
+            { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
+          );
+
+          updateZoneAlert("Tracking started. Stay safe.");
+        }
+        function stopLiveTracking() {
+          if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+          }
+          updateZoneAlert("Tracking stopped.");
+        }
+
+        // expose to buttons
+        window.startLiveTracking = startLiveTracking;
+        window.stopLiveTracking  = stopLiveTracking;
+        window.repaintZones      = paintZones;
+        // ================== /LIVE GEOFENCE + MAP ================== //
     </script>
     <script src="script.js"></script>
 
 </body>
 
 </html>
-
-
-
-
-
