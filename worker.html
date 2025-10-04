@@ -36,6 +36,13 @@
             animation: slideDown 0.5s ease-out;
         }
 
+        .langandrole {
+  display: flex;
+  flex-direction: row;
+  gap: 12px; 
+  align-items: center; 
+}
+
         @keyframes slideDown {
             from {
                 transform: translateY(-100%);
@@ -397,7 +404,7 @@
     </header>
   <!-- Settings -->
     <div class="langandrole">
-        <section id="settings">
+       
             <div>
                 <label for="language">🌐 Choose Language:</label>
                 <select id="language" onchange="updateChecklistLanguage()">
@@ -414,7 +421,7 @@
                     <option value="general">General Worker</option>
                 </select>
             </div>
-        </section>
+      
 
         </div>
     
@@ -947,6 +954,7 @@ window.stopCamera = stopCamera;
 </body>
 
 </html>
+
 
 
 
