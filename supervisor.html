@@ -651,11 +651,60 @@ setInterval(() => {
   loadBreachFeed();
 }, 3000);
 
+<!-- ✅ Firebase Initialization -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+  // 🔥 Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-mO8SbZa4ajdDjBOFItnjpCbs1twqVgc",
+    authDomain: "mine-safety-system.firebaseapp.com",
+    projectId: "mine-safety-system",
+    storageBucket: "mine-safety-system.firebasestorage.app",
+    messagingSenderId: "542149010693",
+    appId: "1:542149010693:web:8832d89cb04ab31f03436c",
+    measurementId: "G-YX5YTQJWZ6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  console.log("✅ Firebase connected on Supervisor");
+
+  // =============== 🔴 Real-time Firebase Worker Location Listening ===============
+
+  // We'll reuse your Leaflet map & workerMarkers map if it exists
+  if (typeof supMap !== 'undefined') {
+    console.log("🛰 Listening to Firestore for worker locations...");
+    onSnapshot(collection(db, "workerLocations"), snapshot => {
+      snapshot.docChanges().forEach(change => {
+        const username = change.doc.id;
+        const data = change.doc.data();
+        if (!data.lat || !data.lon) return;
+
+        if (change.type === "added" || change.type === "modified") {
+          // Check if marker exists
+          if (!workerMarkers.has(username)) {
+            const marker = L.marker([data.lat, data.lon]).addTo(supMap);
+            marker.bindTooltip(username);
+            workerMarkers.set(username, marker);
+          } else {
+            workerMarkers.get(username).setLatLng([data.lat, data.lon]);
+          }
+        }
+      });
+    });
+  } else {
+    console.warn("⚠️ supMap not found yet — Firebase listener skipped");
+  }
+</script>
 
     </script>
 </body>
 
 </html>
+
 
 
 
