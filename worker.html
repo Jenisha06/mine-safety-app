@@ -15,8 +15,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-           background: linear-gradient(to bottom right, #2C3D73, #1B1B1B);
-
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             min-height: 100vh;
             color: #333;
             padding-bottom: 40px;
@@ -47,20 +46,19 @@
             }
         }
 
-      header h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2C3D73;
-  letter-spacing: 0.5px;
-}
+        header h1 {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: 700;
+        }
 
-     header h1 span {
-  color: #FF6B01; /* Safety Orange for emphasis */
-  font-weight: 800;
-}
+        header h1 span {
+            color: #764ba2;
+            font-weight: 800;
+        }
 
         .logoutBtn {
-             background-color: #e74c3c;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
             border: none;
             padding: 10px 24px;
@@ -74,7 +72,7 @@
 
         .logoutBtn:hover {
             transform: translateY(-2px);
-              box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
         }
 
         main {
@@ -100,18 +98,7 @@
             transform: translateY(-4px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
-@media (max-width: 600px) {
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 15px 20px;
-  }
 
-  header h1 {
-    font-size: 20px;
-  }
-}
-        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -330,6 +317,13 @@
                 transform: translateY(0);
             }
         }
+
+        /* UPDATE START: layout polish (desktop) */
+        header .logoutBtn { width:auto; padding:10px 16px; font-size:14px; }
+        #geofence button, #cameraCheck button { width:auto; padding:10px 16px; }
+        #settings { grid-template-columns: repeat(auto-fit, minmax(220px, max-content)); justify-content: start; align-items:center; }
+        #settings select { width:auto; max-width:240px; padding:8px 12px; font-size:14px; }
+        /* UPDATE END */
 
         /* Mobile optimizations */
         @media (max-width: 768px) {
@@ -845,4 +839,3 @@
 </body>
 
 </html>
-
