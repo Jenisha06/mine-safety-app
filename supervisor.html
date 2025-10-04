@@ -725,7 +725,223 @@
             sessionStorage.clear();
             window.location.href = 'index.html';
         }
+
+       // Daily/Weekly Trends Chart
+function loadTrendsChart() {
+    const pointsPerDay = {};
+    const today = new Date();
+    
+    // Generate data for last 7 days
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        // Random data between 30-70 points per day
+        pointsPerDay[dateStr] = Math.floor(Math.random() * 40) + 30;
+    }
+
+    const labels = Object.keys(pointsPerDay);
+    const data = Object.values(pointsPerDay);
+
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if(window.trendsChart) {
+        window.trendsChart.destroy();
+    }
+    
+    window.trendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Points per Day',
+                data: data,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 6,
+                pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Points',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Hazard Heatmap Chart
+function loadHazardHeatmap() {
+    const zones = ['Zone A', 'Zone B', 'Zone C', 'Zone D'];
+    // Generate random hazard counts for each zone (1-15 hazards)
+    const zoneCounts = zones.map(() => Math.floor(Math.random() * 15) + 1);
+
+    const ctx = document.getElementById('heatmapChart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if(window.heatmapChart) {
+        window.heatmapChart.destroy();
+    }
+    
+    window.heatmapChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: zones,
+            datasets: [{
+                label: 'Hazards Reported',
+                data: zoneCounts,
+                backgroundColor: [
+                    'rgba(231, 76, 60, 0.8)',   // Red - High danger
+                    'rgba(230, 126, 34, 0.8)',  // Orange - Medium danger
+                    'rgba(241, 196, 15, 0.8)',  // Yellow - Low danger
+                    'rgba(46, 204, 113, 0.8)'   // Green - Safe
+                ],
+                borderColor: [
+                    'rgba(231, 76, 60, 1)',
+                    'rgba(230, 126, 34, 1)',
+                    'rgba(241, 196, 15, 1)',
+                    'rgba(46, 204, 113, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return 'Hazards: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Hazards',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Mine Zones',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadTrendsChart();
+    loadHazardHeatmap();
+    
+    // Auto-refresh charts every 10 seconds with new random data
+    setInterval(() => {
+        loadTrendsChart();
+        loadHazardHeatmap();
+    }, 10000);
+});
     </script>
 </body>
 </html>
+
 
