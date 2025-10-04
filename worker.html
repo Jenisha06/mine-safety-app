@@ -466,19 +466,24 @@
 
 <section id="video-of-the-day">
   <h2>🎥 Safety Video of the Day</h2>
-  <div class="video-container">
-    <iframe 
-      id="safetyVideo" 
-      src="https://www.youtube.com/watch?v=Y7MnjcxxUDw" 
-      title="Safety Training Video" 
-      frameborder="0" 
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-      allowfullscreen>
+
+  <!-- Responsive 16:9 wrapper -->
+  <div class="yt-wrap">
+    <iframe
+      id="safetyYT"
+      src="https://www.youtube-nocookie.com/embed/d1WZrGytpnQ?rel=0&modestbranding=1&playsinline=1"
+      title="Mine safety training"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin">
     </iframe>
   </div>
+
   <button onclick="markVideoWatched()">Mark as Watched</button>
   <div id="videoSuccess" class="success-message">✓ Video marked as watched! +10 points earned</div>
 </section>
+
 
 
 
@@ -954,6 +959,7 @@ window.stopCamera = stopCamera;
 </body>
 
 </html>
+
 
 
 
