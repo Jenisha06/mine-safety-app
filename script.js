@@ -342,53 +342,90 @@ function reportZoneBreach(zoneName) {
     localStorage.setItem("zoneBreaches", JSON.stringify(zoneBreaches));
 }
 // ---------------- Camera PPE Auto Checklist ---------------- //
-
 let model;
 let cameraStream;
 let detectionInterval;
 
 async function startCamera() {
-    const video = document.getElementById('camera');
-    const status = document.getElementById('cameraStatus');
+  const video = document.getElementById('camera');
+  const status = document.getElementById('cameraStatus');
 
-    try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = cameraStream;
-        status.innerText = "Camera started, loading AI model...";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.innerText = "Camera API not supported in this browser.";
+    return;
+  }
 
-        model = await cocoSsd.load();
-        status.innerText = "Model loaded. Show your PPE items to the camera.";
+  try {
+    // Start video
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = cameraStream;
+    await video.play(); // ensure playback (muted + user gesture helps on mobile)
+    status.innerText = "Camera started, loading AI model...";
 
-        // Run detection every 1 second
-        detectionInterval = setInterval(() => detectPPE(video), 1000);
-
-    } catch (err) {
-        status.innerText = "Camera access denied or error.";
-        console.error(err);
+    // Load model once
+    if (!model) {
+      model = await cocoSsd.load();
     }
+    status.innerText = "Model loaded. Show PPE to the camera.";
+
+    // Start detection loop
+    clearInterval(detectionInterval);
+    detectionInterval = setInterval(() => detectPPE(video), 1000);
+
+  } catch (err) {
+    console.error(err);
+    if (err.name === "NotAllowedError") {
+      status.innerText = "Permission denied. Enable camera access in browser settings.";
+    } else if (err.name === "NotFoundError") {
+      status.innerText = "No camera found on this device.";
+    } else if (window.location.protocol !== "http:" && window.location.protocol !== "https:") {
+      status.innerText = "Run from http://localhost or https:// (not file://).";
+    } else {
+      status.innerText = "Camera error. See console for details.";
+    }
+  }
+}
+
+function stopCamera() {
+  const status = document.getElementById('cameraStatus');
+  clearInterval(detectionInterval);
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  status.innerText = "Camera stopped.";
 }
 
 function detectPPE(video) {
-    model.detect(video).then(predictions => {
-        predictions.forEach(pred => {
-            const item = pred.class.toLowerCase();
+  if (!model) return;
+  model.detect(video).then(predictions => {
+    // For demo: map common detections to PPE checklist items.
+    // Replace with a real helmet/glove model later for accuracy.
+    const seen = predictions.map(p => p.class.toLowerCase());
 
-            // Simple demo mapping
-            if (item.includes("person")) markChecklistItem("Helmet on");
-            if (item.includes("backpack")) markChecklistItem("Gloves on");
-            if (item.includes("shoe")) markChecklistItem("Safety boots");
-        });
-    });
+    if (seen.includes("person")) markChecklistItem("Helmet on");
+    if (seen.includes("backpack") || seen.includes("handbag") || seen.includes("suitcase")) markChecklistItem("Gloves on");
+    if (seen.includes("shoe")) markChecklistItem("Safety boots");
+
+    // Optional: show status
+    document.getElementById('cameraStatus').innerText =
+      `Detecting... found: ${seen.slice(0,5).join(", ") || "none"}`;
+  }).catch(err => {
+    console.error(err);
+    document.getElementById('cameraStatus').innerText = "Detection error. See console.";
+  });
 }
 
 function markChecklistItem(text) {
-    const checklistItems = document.querySelectorAll("#checklist ul li");
-    checklistItems.forEach(li => {
-        if (li.innerText.toLowerCase().includes(text.toLowerCase())) {
-            li.querySelector('input').checked = true;
-        }
-    });
+  const items = document.querySelectorAll("#checklist ul li");
+  items.forEach(li => {
+    if (li.innerText.toLowerCase().includes(text.toLowerCase())) {
+      const cb = li.querySelector('input[type="checkbox"]');
+      if (cb && !cb.checked) cb.checked = true;
+    }
+  });
 }
+
 
 
 
