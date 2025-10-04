@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: #333;
+            padding-bottom: 40px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        header h1 span {
+            color: #764ba2;
+            font-weight: 800;
+        }
+
+        .logoutBtn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .logoutBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.6s ease-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        section h2 {
+            color: #667eea;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #764ba2;
+        }
+
+        #settings {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        label {
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select, input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 15px;
+            color: #2c3e50;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #geofence button, #checklist button:first-of-type, #hazard-report button:first-of-type {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+
+        #geofence button:hover, #checklist button:first-of-type:hover, #hazard-report button:first-of-type:hover {
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+        }
+
+        #zoneAlert {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        }
+
+        #zoneAlert.safe {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            display: block;
+        }
+
+        #zoneAlert.danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            display: block;
+        }
+
+        ul {
+            list-style: none;
+            margin: 16px 0;
+        }
+
+        ul li {
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        ul li:hover {
+            background: #e8f0fe;
+            transform: translateX(4px);
+        }
+
+        ul li input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        ol {
+            list-style-position: inside;
+            color: #34495e;
+        }
+
+        ol li {
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #27ae60;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        ol li:hover {
+            background: #e8f4f8;
+            transform: translateX(4px);
+        }
+
+        ol li:nth-child(1) {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-left-color: #f39c12;
+        }
+
+        ol li:nth-child(2) {
+            background: linear-gradient(135deg, #c0c0c0 0%, #d9d9d9 100%);
+            border-left-color: #95a5a6;
+        }
+
+        ol li:nth-child(3) {
+            background: linear-gradient(135deg, #cd7f32 0%, #d89a5a 100%);
+            border-left-color: #d35400;
+        }
+
+        video {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        #video-of-the-day {
+            grid-column: span 2;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 12px;
+            border: 2px solid #c3e6cb;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            header {
+                padding: 16px 20px;
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            header h1 {
+                font-size: 20px;
+            }
+
+            .logoutBtn {
+                width: 100%;
+            }
+
+            main {
+                margin: 20px auto;
+                padding: 0 16px;
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            #settings, #video-of-the-day {
+                grid-column: span 1;
+            }
+
+            section {
+                padding: 20px;
+            }
+
+            section h2 {
+                font-size: 18px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 11px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 18px;
+            }
+
+            section {
+                padding: 16px;
+            }
+
+            section h2 {
+                font-size: 16px;
+                margin-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>👷 Welcome, <span id="workerName">Worker</span>!</h1>
+        <button class="logoutBtn" onclick="logout()">Logout</button>
+    </header>
+
+    <main>
+        <!-- Settings -->
+        <section id="settings">
+            <div>
+                <label for="language">🌐 Choose Language:</label>
+                <select id="language" onchange="updateChecklistLanguage()">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी</option>
+                    <option value="te">తెలుగు</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="roleType">👨‍🔧 Select Role:</label>
+                <select id="roleType" onchange="updateChecklistRole()">
+                    <option value="drill">Drill Operator</option>
+                    <option value="blaster">Blaster</option>
+                    <option value="general">General Worker</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Geofence -->
+        <section id="geofence">
+            <h2>📍 Mine Zone Safety Check</h2>
+            <button onclick="checkWorkerZone()">Check My Location</button>
+            <p id="zoneAlert"></p>
+        </section>
+
+        <!-- Daily Checklist -->
+        <section id="checklist">
+            <h2>✅ Daily Safety Checklist</h2>
+            <button onclick="readChecklist()">🔊 Listen to Checklist</button>
+            <ul id="checklistItems">
+                <!-- Checklist items generated dynamically -->
+            </ul>
+            <button onclick="submitChecklist()">Submit Checklist</button>
+            <div id="checklistSuccess" class="success-message">✓ Checklist submitted successfully!</div>
+        </section>
+
+        <!-- Video of the Day -->
+        <section id="video-of-the-day">
+            <h2>🎥 Video of the Day</h2>
+            <video id="safetyVideo" controls>
+                <source src="videos/sample.mp4" type="video/mp4">
+                Your browser does not support HTML5 video.
+            </video>
+            <button onclick="markVideoWatched()">Mark as Watched</button>
+            <div id="videoSuccess" class="success-message">✓ Video marked as watched! +10 points earned</div>
+        </section>
+
+        <!-- Hazard Reporting -->
+        <section id="hazard-report">
+            <h2>⚠️ Report a Hazard</h2>
+            <button onclick="readHazardInstructions()">🔊 Listen Instructions</button>
+            <input type="text" id="hazardDesc" placeholder="Describe the hazard in detail...">
+            <input type="file" id="hazardFile" accept="image/*,video/*">
+            <button onclick="submitHazard()">Submit Report</button>
+            <div id="hazardSuccess" class="success-message">✓ Hazard reported successfully! +15 points earned</div>
+        </section>
+
+        <!-- Leaderboard -->
+        <section id="leaderboard">
+            <h2>🏆 Leaderboard</h2>
+            <ol id="leaderboardList">
+                <li>Worker A - 50 points</li>
+                <li>Worker B - 40 points</li>
+                <li>Worker C - 30 points</li>
+            </ol>
+        </section>
+    </main>
+
+    <script>
+        // Check if user is logged in
+        const username = sessionStorage.getItem('username');
+        const role = sessionStorage.getItem('role');
+        
+        if (!username || role !== 'worker') {
+            window.location.href = 'index.html';
+        }
+        
+        // Store data
+        let userData = { username: username, role: role };
+        let currentLanguage = 'en';
+        let currentRole = 'drill';
+        let userPoints = 25;
+
+        // Load username
+        document.getElementById('workerName').innerText = userData.username;
+
+        // Checklist data by role and language
+        const checklistData = {
+            en: {
+                drill: [
+                    'Check drill bit condition',
+                    'Inspect hydraulic lines',
+                    'Verify emergency stop function',
+                    'Check water supply for dust suppression',
+                    'Inspect personal protective equipment'
+                ],
+                blaster: [
+                    'Verify explosive storage security',
+                    'Check detonator functionality',
+                    'Inspect blast area clearance',
+                    'Confirm communication devices',
+                    'Review blast plan and timing'
+                ],
+                general: [
+                    'Inspect helmet and safety boots',
+                    'Check work area for hazards',
+                    'Verify emergency exit routes',
+                    'Inspect tools and equipment',
+                    'Review daily safety briefing'
+                ]
+            },
+            hi: {
+                drill: [
+                    'ड्रिल बिट की स्थिति जांचें',
+                    'हाइड्रोलिक लाइनों का निरीक्षण करें',
+                    'आपातकालीन स्टॉप फ़ंक्शन सत्यापित करें',
+                    'धूल दमन के लिए पानी की आपूर्ति जांचें',
+                    'व्यक्तिगत सुरक्षा उपकरण की जांच करें'
+                ],
+                blaster: [
+                    'विस्फोटक भंडारण सुरक्षा सत्यापित करें',
+                    'डेटोनेटर कार्यक्षमता जांचें',
+                    'विस्फोट क्षेत्र निकासी का निरीक्षण करें',
+                    'संचार उपकरण की पुष्टि करें',
+                    'विस्फोट योजना और समय की समीक्षा करें'
+                ],
+                general: [
+                    'हेलमेट और सुरक्षा जूते का निरीक्षण करें',
+                    'कार्य क्षेत्र में खतरों की जांच करें',
+                    'आपातकालीन निकास मार्ग सत्यापित करें',
+                    'उपकरण और साजो-सामान का निरीक्षण करें',
+                    'दैनिक सुरक्षा ब्रीफिंग की समीक्षा करें'
+                ]
+            },
+            te: {
+                drill: [
+                    'డ్రిల్ బిట్ స్థితిని తనిఖీ చేయండి',
+                    'హైడ్రాలిక్ లైన్లను తనిఖీ చేయండి',
+                    'ఎమర్జెన్సీ స్టాప్ ఫంక్షన్‌ను ధృవీకరించండి',
+                    'దుమ్ము అణచివేత కోసం నీటి సరఫరాను తనిఖీ చేయండి',
+                    'వ్యక్తిగత రక్షణ పరికరాలను తనిఖీ చేయండి'
+                ],
+                blaster: [
+                    'పేలుడు నిల్వ భద్రతను ధృవీకరించండి',
+                    'డిటోనేటర్ కార్యాచరణను తనిఖీ చేయండి',
+                    'పేలుడు ప్రాంత క్లియరెన్స్‌ను తనిఖీ చేయండి',
+                    'కమ్యూనికేషన్ పరికరాలను నిర్ధారించండి',
+                    'పేలుడు ప్రణాళిక మరియు సమయాన్ని సమీక్షించండి'
+                ],
+                general: [
+                    'హెల్మెట్ మరియు భద్రతా బూట్లను తనిఖీ చేయండి',
+                    'పని ప్రాంతంలో ప్రమాదాల కోసం తనిఖీ చేయండి',
+                    'అత్యవసర నిష్క్రమణ మార్గాలను ధృవీకరించండి',
+                    'సాధనాలు మరియు పరికరాలను తనిఖీ చేయండి',
+                    'రోజువారీ భద్రతా బ్రీఫింగ్‌ను సమీక్షించండి'
+                ]
+            }
+        };
+
+        // Update checklist based on language and role
+        function updateChecklist() {
+            const checklistUl = document.getElementById('checklistItems');
+            checklistUl.innerHTML = '';
+            
+            const items = checklistData[currentLanguage][currentRole];
+            items.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="checkbox" id="check${index}" />
+                    <label for="check${index}">${item}</label>
+                `;
+                checklistUl.appendChild(li);
+            });
+        }
+
+        function updateChecklistLanguage() {
+            currentLanguage = document.getElementById('language').value;
+            updateChecklist();
+        }
+
+        function updateChecklistRole() {
+            currentRole = document.getElementById('roleType').value;
+            updateChecklist();
+        }
+
+        // Initialize checklist
+        updateChecklist();
+
+        // Text-to-speech function
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = currentLanguage === 'en' ? 'en-US' : currentLanguage === 'hi' ? 'hi-IN' : 'te-IN';
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Text-to-speech not supported in this browser');
+            }
+        }
+
+        function readChecklist() {
+            const items = checklistData[currentLanguage][currentRole];
+            const text = items.join('. ');
+            speak(text);
+        }
+
+        function readHazardInstructions() {
+            const instructions = {
+                en: 'Please describe the hazard in detail and attach a photo or video if possible. Submit your report to help keep everyone safe.',
+                hi: 'कृपया खतरे का विस्तार से वर्णन करें और यदि संभव हो तो एक फोटो या वीडियो संलग्न करें। सभी को सुरक्षित रखने में मदद के लिए अपनी रिपोर्ट जमा करें।',
+                te: 'దయచేసి ప్రమాదాన్ని వివరంగా వివరించండి మరియు సాధ్యమైతే ఫోటో లేదా వీడియోను జోడించండి. అందరినీ సురక్షితంగా ఉంచడానికి మీ నివేదికను సమర్పించండి.'
+            };
+            speak(instructions[currentLanguage]);
+        }
+
+        function checkWorkerZone() {
+            const zoneAlert = document.getElementById('zoneAlert');
+            
+            // Simulate geolocation check
+            const isInSafeZone = Math.random() > 0.3;
+            
+            if (isInSafeZone) {
+                zoneAlert.className = 'safe';
+                zoneAlert.textContent = '✓ You are in a safe zone';
+            } else {
+                zoneAlert.className = 'danger';
+                zoneAlert.textContent = '⚠ Warning: You are in a restricted zone!';
+            }
+        }
+
+        function submitChecklist() {
+            const checkboxes = document.querySelectorAll('#checklistItems input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            if (allChecked) {
+                const successMsg = document.getElementById('checklistSuccess');
+                successMsg.classList.add('show');
+                userPoints += 10;
+                setTimeout(() => successMsg.classList.remove('show'), 3000);
+            } else {
+                alert('Please complete all checklist items before submitting');
+            }
+        }
+
+        function markVideoWatched() {
+            const successMsg = document.getElementById('videoSuccess');
+            successMsg.classList.add('show');
+            userPoints += 10;
+            setTimeout(() => successMsg.classList.remove('show'), 3000);
+        }
+
+        function submitHazard() {
+            const hazardDesc = document.getElementById('hazardDesc').value;
+            const hazardFile = document.getElementById('hazardFile').files[0];
+            
+            if (hazardDesc.trim()) {
+                const successMsg = document.getElementById('hazardSuccess');
+                successMsg.classList.add('show');
+                userPoints += 15;
+                
+                // Clear form
+                document.getElementById('hazardDesc').value = '';
+                document.getElementById('hazardFile').value = '';
+                
+                setTimeout(() => successMsg.classList.remove('show'), 3000);
+            } else {
+                alert('Please describe the hazard before submitting');
+            }
+        }
+
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
