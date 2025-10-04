@@ -841,10 +841,29 @@
         // ================== /LIVE GEOFENCE + MAP ================== //
     </script>
     <script src="script.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+  const firebaseConfig = { /* same config as above */ };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const username = sessionStorage.getItem('username') || 'Worker';
+
+  navigator.geolocation.watchPosition(pos => {
+    setDoc(doc(db, "workerLocations", username), {
+      lat: pos.coords.latitude,
+      lon: pos.coords.longitude,
+      updatedAt: serverTimestamp()
+    });
+  });
+</script>
 
 </body>
 
 </html>
+
 
 
 
