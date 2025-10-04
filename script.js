@@ -424,11 +424,7 @@ function markChecklistItem(text) {
 }
 // ================== LIVE GEOFENCE + MAP (WORKER) ================== //
 // Zones as circles (easy geofence + easy map). Replace coords with real mine data.
-const hazardZones = [
-  { name: "Blasting Zone", lat: 19.125, lon: 84.125, radius: 120, baseRisk: "HIGH" },
-  { name: "Heavy Machinery", lat: 19.123, lon: 84.123, radius: 140, baseRisk: "MEDIUM" },
-  { name: "Storage Yard",   lat: 19.127, lon: 84.128, radius: 100, baseRisk: "LOW" }
-];
+
 
 // Globals
 let workerMap, workerMarker, zoneCircles = [];
@@ -574,6 +570,7 @@ function stopLiveTracking() {
   document.getElementById("zoneAlert").innerText = "Tracking stopped.";
   speakText?.("Live tracking stopped.");
 }
+
 
 
 
