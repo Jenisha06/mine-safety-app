@@ -328,4 +328,20 @@ function checkWorkerZone() {
     }
 }
 
+// Report hazard zone entry to supervisor dashboard
+function reportZoneBreach(zoneName) {
+    const username = localStorage.getItem('username');
+    let zoneBreaches = JSON.parse(localStorage.getItem("zoneBreaches") || "[]");
+
+    // Avoid duplicate entries within 5 minutes
+    const now = new Date().getTime();
+    const recentBreach = zoneBreaches.find(z => z.worker === username && z.zone === zoneName && (now - z.timestamp < 5*60*1000));
+    if(recentBreach) return;
+
+    zoneBreaches.push({ worker: username, zone: zoneName, timestamp: now });
+    localStorage.setItem("zoneBreaches", JSON.stringify(zoneBreaches));
+}
+
+
+
 
