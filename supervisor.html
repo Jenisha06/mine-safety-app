@@ -266,6 +266,12 @@
             </ul>
         </section>
 
+        <section id="integratedLeaderboard">
+    <h2>Worker Engagement & Safety Compliance</h2>
+    <canvas id="integratedChart" width="700" height="400"></canvas>
+</section>
+
+
         <!-- Worker Compliance / Leaderboard -->
         <section id="workerCompliance">
             <h2>🏆 Worker Leaderboard</h2>
@@ -499,8 +505,60 @@
 loadZoneAlerts();
 setInterval(loadZoneAlerts, 5000);
 
+
+        function loadIntegratedLeaderboard() {
+    const leaderboard = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+    const zoneBreaches = JSON.parse(localStorage.getItem("zoneBreaches") || "[]");
+
+    // Aggregate points per worker
+    const workersMap = {};
+
+    // Points from leaderboard
+    leaderboard.forEach(entry => {
+        if(!workersMap[entry.worker]) workersMap[entry.worker] = {checklist:0, video:0, hazard:0, zoneBreach:0};
+        workersMap[entry.worker][entry.type] += entry.points;
+    });
+
+    // Count zone breaches per worker (could subtract points or mark as alerts)
+    zoneBreaches.forEach(breach => {
+        if(!workersMap[breach.worker]) workersMap[breach.worker] = {checklist:0, video:0, hazard:0, zoneBreach:0};
+        workersMap[breach.worker].zoneBreach += 1; // count as penalty or alert
+    });
+
+    const labels = Object.keys(workersMap);
+    const checklistData = labels.map(w => workersMap[w].checklist);
+    const videoData = labels.map(w => workersMap[w].video);
+    const hazardData = labels.map(w => workersMap[w].hazard);
+    const zoneBreachData = labels.map(w => workersMap[w].zoneBreach);
+
+    const ctx = document.getElementById('integratedChart').getContext('2d');
+    if(window.integratedChart) window.integratedChart.destroy();
+    window.integratedChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Checklist Points', data: checklistData, backgroundColor: 'rgba(54, 162, 235, 0.7)' },
+                { label: 'Video Points', data: videoData, backgroundColor: 'rgba(255, 206, 86, 0.7)' },
+                { label: 'Hazard Points', data: hazardData, backgroundColor: 'rgba(75, 192, 192, 0.7)' },
+                { label: 'Zone Breaches', data: zoneBreachData, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { title: { display: true, text: 'Worker Engagement & Safety Compliance' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+// Load on page load and auto-refresh every 5 seconds
+loadIntegratedLeaderboard();
+setInterval(loadIntegratedLeaderboard, 5000);
+
     </script>
 </body>
 
 </html>
+
 
