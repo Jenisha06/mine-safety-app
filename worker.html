@@ -44,6 +44,44 @@
             justify-content:center;
 }
 
+
+         .sos-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .sos-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.5);
+        }
+
+        .sos-btn:active {
+            transform: translateY(0);
+        }
+
+        .alert-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .alert-message.show {
+            display: block;
+        }
         @keyframes slideDown {
             from {
                 transform: translateY(-100%);
@@ -453,7 +491,8 @@
       
 
         </div>
-
+<button class="sos-btn" onclick="sendSOS()">SOS</button>
+    <div id="alertMsg" class="alert-message"></div>
         </center>
     
     <main>
@@ -1152,6 +1191,65 @@ function detectPPE(video) {
 // ✅ Attach functions to window for button onclick
 window.startCamera = startCamera;
 window.stopCamera = stopCamera;
+
+
+     function sendSOS() {
+            const workerName = sessionStorage.getItem('username') || 'Worker';
+            
+            // Get location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude.toFixed(6);
+                        const lng = position.coords.longitude.toFixed(6);
+                        
+                        // Emergency data
+                        const emergencyData = {
+                            worker: workerName,
+                            latitude: lat,
+                            longitude: lng,
+                            timestamp: new Date().toLocaleString(),
+                            message: '🚨 EMERGENCY! Worker needs immediate assistance!'
+                        };
+
+                        // Send message (integrate with your backend/messaging service)
+                        console.log('Emergency Alert:', emergencyData);
+                        
+                        // Show success message
+                        const alertMsg = document.getElementById('alertMsg');
+                        alertMsg.textContent = '✅ Emergency alert sent successfully!';
+                        alertMsg.classList.add('show');
+                        
+                        setTimeout(() => {
+                            alertMsg.classList.remove('show');
+                        }, 5000);
+
+                        // Here you can integrate with:
+                        // sendToBackend(emergencyData);
+                        // sendWhatsApp(emergencyData);
+                        // sendSMS(emergencyData);
+                    },
+                    function(error) {
+                        console.error('Location error:', error);
+                        alert('Unable to get location. Emergency alert sent without location data.');
+                    }
+                );
+            } else {
+                alert('Geolocation not supported. Emergency alert sent without location data.');
+            }
+        }
+
+        // Example backend integration:
+        function sendToBackend(data) {
+            fetch('/api/emergency', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => console.log('Alert sent:', result))
+            .catch(error => console.error('Error:', error));
+        }
 </script>
 
 
@@ -1159,6 +1257,7 @@ window.stopCamera = stopCamera;
 </body>
 
 </html>
+
 
 
 
