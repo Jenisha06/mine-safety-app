@@ -1262,13 +1262,13 @@ window.stopCamera = stopCamera;
         // Send emergency message via WhatsApp
         function sendWhatsApp(data) {
             // Format emergency message
-            const message = `🚨 *MINE SAFETY EMERGENCY ALERT* 🚨
+            const message = ` *MINE SAFETY EMERGENCY ALERT* 
 
-⚠️ *Worker:* ${data.worker}
-📍 *Location:* 
+ *Worker:* ${data.worker}
+ *Location:* 
    Latitude: ${data.latitude}
    Longitude: ${data.longitude}
-🕐 *Time:* ${data.timestamp}
+*Time:* ${data.timestamp}
 
 ${data.message}
 
@@ -1293,6 +1293,7 @@ Google Maps: https://www.google.com/maps?q=${data.latitude},${data.longitude}`;
 </body>
 
 </html>
+
 
 
 
