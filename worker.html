@@ -55,13 +55,14 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+           
+             width:50px;
         }
 
         .sos-btn:hover {
             background: #c82333;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.5);
+         
         }
 
         .sos-btn:active {
@@ -1212,43 +1213,79 @@ window.stopCamera = stopCamera;
                             message: '🚨 EMERGENCY! Worker needs immediate assistance!'
                         };
 
-                        // Send message (integrate with your backend/messaging service)
+                        // Log to console
                         console.log('Emergency Alert:', emergencyData);
+                        
+                        // Send to WhatsApp
+                        sendWhatsApp(emergencyData);
                         
                         // Show success message
                         const alertMsg = document.getElementById('alertMsg');
-                        alertMsg.textContent = '✅ Emergency alert sent successfully!';
+                        alertMsg.textContent = '✅ Opening WhatsApp to send emergency alert...';
                         alertMsg.classList.add('show');
                         
                         setTimeout(() => {
                             alertMsg.classList.remove('show');
                         }, 5000);
-
-                        // Here you can integrate with:
-                        // sendToBackend(emergencyData);
-                        // sendWhatsApp(emergencyData);
-                        // sendSMS(emergencyData);
                     },
                     function(error) {
                         console.error('Location error:', error);
-                        alert('Unable to get location. Emergency alert sent without location data.');
+                        
+                        // Send without location
+                        const emergencyData = {
+                            worker: workerName,
+                            latitude: 'Unknown',
+                            longitude: 'Unknown',
+                            timestamp: new Date().toLocaleString(),
+                            message: '🚨 EMERGENCY! Worker needs immediate assistance!'
+                        };
+                        
+                        sendWhatsApp(emergencyData);
+                        alert('Location unavailable. Sending emergency alert without location data.');
                     }
                 );
             } else {
-                alert('Geolocation not supported. Emergency alert sent without location data.');
+                // Send without location
+                const emergencyData = {
+                    worker: workerName,
+                    latitude: 'Not supported',
+                    longitude: 'Not supported',
+                    timestamp: new Date().toLocaleString(),
+                    message: '🚨 EMERGENCY! Worker needs immediate assistance!'
+                };
+                
+                sendWhatsApp(emergencyData);
+                alert('Geolocation not supported. Sending emergency alert without location data.');
             }
         }
 
-        // Example backend integration:
-        function sendToBackend(data) {
-            fetch('/api/emergency', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => console.log('Alert sent:', result))
-            .catch(error => console.error('Error:', error));
+        // Send emergency message via WhatsApp
+        function sendWhatsApp(data) {
+            // Format emergency message
+            const message = `🚨 *MINE SAFETY EMERGENCY ALERT* 🚨
+
+⚠️ *Worker:* ${data.worker}
+📍 *Location:* 
+   Latitude: ${data.latitude}
+   Longitude: ${data.longitude}
+🕐 *Time:* ${data.timestamp}
+
+${data.message}
+
+*IMMEDIATE ASSISTANCE REQUIRED!*
+Please respond immediately and dispatch help.
+
+Google Maps: https://www.google.com/maps?q=${data.latitude},${data.longitude}`;
+
+            // Replace with your supervisor's phone number (include country code without + or -)
+            // Example: India +91 1234567890 becomes 911234567890
+            const supervisorPhone = '911234567890'; // CHANGE THIS TO ACTUAL NUMBER
+            
+            // Create WhatsApp URL
+            const whatsappUrl = `https://wa.me/${supervisorPhone}?text=${encodeURIComponent(message)}`;
+            
+            // Open WhatsApp in new tab
+            window.open(whatsappUrl, '_blank');
         }
 </script>
 
@@ -1257,6 +1294,7 @@ window.stopCamera = stopCamera;
 </body>
 
 </html>
+
 
 
 
